@@ -1,6 +1,4 @@
-# ============================================
 # Python / Django
-# ============================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -36,9 +34,7 @@ coverage.xml
 *.cover
 .hypothesis/
 
-# ============================================
 # Node.js / React
-# ============================================
 node_modules/
 .pnp
 .pnp.js
@@ -61,9 +57,8 @@ frontend/.env
 frontend/.env.local
 frontend/.env.*.local
 
-# ============================================
+
 # IDEs and Editors
-# ============================================
 .vscode/
 !.vscode/settings.json.example
 !.vscode/extensions.json
@@ -74,9 +69,8 @@ frontend/.env.*.local
 .DS_Store
 Thumbs.db
 
-# ============================================
+
 # OS Files
-# ============================================
 .DS_Store
 .DS_Store?
 ._*
@@ -86,9 +80,8 @@ ehthumbs.db
 Thumbs.db
 desktop.ini
 
-# ============================================
+
 # Project-specific
-# ============================================
 # Secrets — NEVER commit these
 *.pem
 *.key
