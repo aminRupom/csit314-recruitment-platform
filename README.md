@@ -1,8 +1,9 @@
 # CSIT314 Recruitment Platform
+#Group name: Bring Back Seconds
 
 A web-based recruitment platform that connects employers with job candidates. Employers can post jobs, browse candidate profiles, and receive AI-powered candidate recommendations. Candidates can create profiles, browse jobs, and apply to positions.
 
-> **Subject:** CSIT314/ISIT950 — Systems Development Methodologies
+> **Subject:** CSIT314 — Systems Development Methodologies
 > **Institution:** University of Wollongong
 > **Semester:** Autumn 2026
 
@@ -103,7 +104,8 @@ csit314-recruitment-platform/
 - Python 3.11+
 - Node.js 20+
 - Git
-- PostgreSQL 15+ 
+- PostgreSQL 15+
+- SQLite
 
 ### Backend Setup
 
@@ -159,7 +161,7 @@ refactor: extract auth middleware
 1. Create a feature branch from `develop`
 2. Make changes, commit with clear messages
 3. Push branch and open a PR against `develop`
-4. At least **one teammate must review** before merging
+4. At least one teammate must review before merging
 5. CI checks must pass (tests, linting)
 6. Squash and merge once approved
 
