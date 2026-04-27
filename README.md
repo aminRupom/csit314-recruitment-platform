@@ -19,7 +19,6 @@ A web-based recruitment platform that connects employers with job candidates. Em
 - [Development Workflow](#development-workflow)
 - [Testing](#testing)
 - [CI/CD](#cicd)
-- [Documentation](#documentation)
 - [License](#license)
 
 ---
@@ -85,10 +84,6 @@ csit314-recruitment-platform/
 │   └── package.json
 ├── database/                   # SQL schemas & migration scripts
 ├── tests/                      # Integration & E2E tests
-├── docs/                       # UML diagrams, reports, meeting minutes
-│   ├── progress-report/
-│   ├── uml/
-│   └── meetings/
 ├── .gitignore
 ├── CONTRIBUTING.md
 ├── LICENSE
@@ -134,15 +129,14 @@ The frontend will run at `http://localhost:5173`.
 
 ## Development Workflow
 
-We follow a Scrum-based workflow
+We follow a Scrum-based workflow.
 
 ### Branching Strategy
 
 - `main` — production-ready code 
 - `develop` — integration branch for the current sprint
-- `feature/<short-name>` — feature branches (e.g., `feature/job-posting-form`)
+- `feature/<short-name>` — feature branches
 - `bugfix/<short-name>` — bug fixes
-- `docs/<short-name>` — documentation-only changes
 
 ### Commit Message Convention
 
@@ -171,7 +165,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full details.
 
 ## Testing
 
-We follow **Test-Driven Development (TDD)** practices as covered in Week 5.
+We follow Test-Driven Development (TDD) practices.
 
 ### Backend Tests
 
@@ -208,15 +202,6 @@ PRs that fail CI cannot be merged into `main` or `develop`.
 
 ---
 
-## Documentation
-
-- [Progress Report](docs/progress-report/) — Week 7 deliverable
-- [UML Diagrams](docs/uml/) — Use case, class, sequence diagrams
-- [Meeting Minutes](docs/meetings/) — Fortnightly team standups
-- [Development Model](docs/development-model.md) — Methodology details
-
----
-
 ## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
@@ -225,4 +210,4 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 ## Acknowledgements
 
-Project guided by the CSIT314/ISIT950 subject team at the University of Wollongong.
+Project guided by the University of Wollongong.
