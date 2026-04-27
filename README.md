@@ -27,18 +27,16 @@ A web-based recruitment platform that connects employers with job candidates. Em
 
 The platform supports two main user roles:
 
-**Employers** can:
+Employers can:
 - Publish job postings with detailed descriptions, required skills, education level, and work mode (Remote/On-site/Hybrid)
 - Browse candidate profiles (filtered by skill, education, experience)
 - Search candidates by specific criteria
 - Receive Top-10 candidate recommendations based on job requirements
 
-**Candidates** can:
+Candidates can:
 - Create and manage profiles
 - Browse and search job postings
 - Apply for positions
-
-> **Note:** A requirement change will be introduced in Week 8 (per project brief), so the architecture is designed to be extensible.
 
 ---
 
@@ -51,19 +49,19 @@ The platform supports two main user roles:
 | Database | PostgreSQL (production), SQLite (local dev) |
 | Testing | PyTest (backend), Jest + React Testing Library (frontend) |
 | CI/CD | GitHub Actions |
-| Project Management | GitHub Projects (Scrum/Kanban board) |
+| Project Management | Jira (Scrum board) |
 
 ---
 
 ## Team Members
 
-| Name | Student ID | Role | GitHub |
-|------|-----------|------|--------|
-| TBA | TBA | Group Leader / Backend | @username |
-| TBA | TBA | Frontend Lead | @username |
-| TBA | TBA | Backend Developer | @username |
-| TBA | TBA | QA / Testing | @username |
-| TBA | TBA | DevOps / Documentation | @username |
+| Name | Student ID | Role | Functional Area |
+|------|-----------|------|-----------------|
+| Shobita Sutharshan | 8868165 | Team Lead (Scrum Master) | Project coordination, sprint management |
+| Sofia Isabelle Ong Flores | 7765745 | System Designer | System architecture, risk analysis and mitigation |
+| Masaki Inoue | 8445424 | Requirement Analyst | Creating user stories, gathering requirements |
+| Ayan Deb Nath | 8907067 | Frontend Developer | UX/UI design and implementation |
+| Md Aminul Islam Rupom | 8782957 | AI/ML & Backend Developer | AI/ML and backend development |
 
 ---
 
@@ -105,7 +103,7 @@ csit314-recruitment-platform/
 - Python 3.11+
 - Node.js 20+
 - Git
-- PostgreSQL 15+ (optional for local dev — SQLite works out of the box)
+- PostgreSQL 15+ 
 
 ### Backend Setup
 
@@ -134,11 +132,11 @@ The frontend will run at `http://localhost:5173`.
 
 ## Development Workflow
 
-We follow a **Scrum-based workflow with Kanban board tracking** (see `/docs/development-model.md`).
+We follow a Scrum-based workflow
 
 ### Branching Strategy
 
-- `main` — production-ready code (protected; only updated via PR)
+- `main` — production-ready code 
 - `develop` — integration branch for the current sprint
 - `feature/<short-name>` — feature branches (e.g., `feature/job-posting-form`)
 - `bugfix/<short-name>` — bug fixes
@@ -193,7 +191,7 @@ npm run test:coverage
 
 ## CI/CD
 
-Continuous integration is configured via **GitHub Actions** (see `.github/workflows/ci.yml`).
+Continuous integration is configured via GitHub Actions (see `.github/workflows/ci.yml`).
 
 On every push or pull request, the pipeline will:
 
@@ -212,7 +210,7 @@ PRs that fail CI cannot be merged into `main` or `develop`.
 
 - [Progress Report](docs/progress-report/) — Week 7 deliverable
 - [UML Diagrams](docs/uml/) — Use case, class, sequence diagrams
-- [Meeting Minutes](docs/meetings/) — Weekly team standups
+- [Meeting Minutes](docs/meetings/) — Fortnightly team standups
 - [Development Model](docs/development-model.md) — Methodology details
 
 ---
