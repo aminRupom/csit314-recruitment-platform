@@ -1,5 +1,4 @@
 # CSIT314 Recruitment Platform
-Group name: Bring Back Seconds
 
 A web-based recruitment platform that connects employers with job candidates. Employers can post jobs, browse candidate profiles, and receive AI-powered candidate recommendations. Candidates can create profiles, browse jobs, and apply to positions.
 
