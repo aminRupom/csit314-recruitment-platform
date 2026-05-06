@@ -16,8 +16,19 @@ export async function loginUser(loginData) {
     };
   }
 
+
   return {
     success: false,
     message: "Invalid email or password.",
+  };
+}
+
+export async function registerCandidate(candidateData) {
+  console.log("Candidate profile submitted:", candidateData);
+
+  return {
+    success: true,
+    message: "Candidate profile created successfully.",
+    candidate: candidateData,
   };
 }
