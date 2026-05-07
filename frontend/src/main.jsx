@@ -6,7 +6,7 @@ import "./styles/global.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/csit314-recruitment-platform">
       <App />
     </BrowserRouter>
   </React.StrictMode>
