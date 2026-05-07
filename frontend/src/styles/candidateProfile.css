@@ -1,19 +1,19 @@
 .candidate-page {
   min-height: 100vh;
   background: linear-gradient(115deg, #30345b 0%, #171b42 45%, #070b27 100%);
-  padding: 24px 18px;
+  padding: 0;
   color: #ffffff;
 }
 
 .candidate-profile {
   width: 100%;
-  max-width: 980px;
+  max-width: none;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 76% 24%;
   border: 2px solid rgba(255, 255, 255, 0.9);
   background: rgba(10, 14, 43, 0.72);
-  min-height: 900px;
+  min-height: 100vh;
 }
 
 .profile-main {
