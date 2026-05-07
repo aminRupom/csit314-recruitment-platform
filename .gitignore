@@ -99,3 +99,14 @@ config/local.json
 logs/
 *.log
 .Rhistory
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Django
+.Rhistory
+__pycache__/
+*.pyc
+db.sqlite3
+backend/media/
