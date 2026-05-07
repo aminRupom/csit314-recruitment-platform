@@ -1,0 +1,160 @@
+.login-page {
+  min-height: 100vh;
+  background: linear-gradient(115deg, #30345b 0%, #171b42 45%, #070b27 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 42px 20px;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 560px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 58px;
+}
+
+.login-header h1 {
+  font-size: 58px;
+  line-height: 1;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.login-header h2 {
+  font-size: 42px;
+  line-height: 1;
+  font-weight: 400;
+  color: #ffffff;
+}
+
+.login-form {
+  width: 100%;
+}
+
+.form-group {
+  margin-bottom: 26px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 20px;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.form-group input {
+  width: 100%;
+  height: 38px;
+  border: 2px solid rgba(11, 14, 44, 0.9);
+  border-radius: 7px;
+  background-color: #485083;
+  color: #ffffff;
+  font-size: 18px;
+  padding: 8px 12px;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: #aeb8f2;
+  box-shadow: 0 0 0 3px rgba(174, 184, 242, 0.2);
+}
+
+.error-message {
+  color: #ffb4b4;
+  font-size: 15px;
+  margin-top: -10px;
+  margin-bottom: 16px;
+}
+
+.login-button {
+  display: block;
+  width: 66%;
+  height: 36px;
+  margin: 10px auto 34px;
+  border: none;
+  border-radius: 7px;
+  background-color: #9ba8df;
+  color: #090b18;
+  font-size: 20px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.login-button:hover {
+  background-color: #b3bef0;
+  transform: translateY(-1px);
+}
+
+.signup-area {
+  text-align: center;
+}
+
+.signup-area p {
+  font-size: 20px;
+  margin-bottom: 14px;
+}
+
+.role-buttons {
+  width: 66%;
+  height: 36px;
+  margin: 0 auto;
+  display: flex;
+  border: 2px solid #ffffff;
+  border-radius: 7px;
+  overflow: hidden;
+  position: relative;
+}
+
+.role-buttons button {
+  flex: 1;
+  border: none;
+  background-color: transparent;
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.role-buttons button:first-child {
+  border-right: 2px solid #ffffff;
+}
+
+.role-buttons button:hover,
+.role-buttons .selected-role {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+@media (max-width: 650px) {
+  .login-page {
+    padding-top: 36px;
+  }
+
+  .login-header {
+    margin-bottom: 42px;
+  }
+
+  .login-header h1 {
+    font-size: 46px;
+  }
+
+  .login-header h2 {
+    font-size: 34px;
+  }
+
+  .form-group label,
+  .signup-area p,
+  .role-buttons button,
+  .login-button {
+    font-size: 17px;
+  }
+
+  .login-button,
+  .role-buttons {
+    width: 100%;
+  }
+}
