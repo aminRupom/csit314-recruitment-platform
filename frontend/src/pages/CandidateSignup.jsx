@@ -38,6 +38,8 @@ function CandidateSignup() {
   });
 
   const [message, setMessage] = useState("");
+  const [showSkillInput, setShowSkillInput] = useState(false);
+  const [showAchievementInput, setShowAchievementInput] = useState(false);
 
   function handleChange(event) {
     const { name, value, type, checked } = event.target;
@@ -67,6 +69,8 @@ function CandidateSignup() {
       skills: [...formData.skills, formData.newSkill.trim()],
       newSkill: "",
     });
+
+    setShowSkillInput(false);
   }
 
   function removeSkill(skillToRemove) {
@@ -86,6 +90,7 @@ function CandidateSignup() {
       achievements: [...formData.achievements, formData.newAchievement.trim()],
       newAchievement: "",
     });
+    setShowAchievementInput(false);
   }
 
   function removeAchievement(achievementToRemove) {
@@ -385,13 +390,16 @@ function CandidateSignup() {
             </div>
           </div>
 
-          <div className="section-title">
+          {/* <div className="section-title">
             <span></span>
             <p>Skills & Achievements</p>
             <span></span>
-          </div>
+          </div> */}
 
-          <div className="field-group">
+
+            
+
+          {/* <div className="field-group">
             <label>Skills</label>
 
             <div className="tag-box">
@@ -453,7 +461,109 @@ function CandidateSignup() {
                 {achievement} ×
               </button>
             ))}
-          </div>
+          </div> */}
+
+
+
+          <div className="section-title">
+  <span></span>
+  <p>Skills & Achievements</p>
+  <span></span>
+</div>
+
+<div className="profile-subsection-row">
+  <label>Skills</label>
+
+  <button
+    type="button"
+    className="mini-button"
+    onClick={() => setShowSkillInput(!showSkillInput)}
+  >
+    {showSkillInput ? "Cancel" : "Add Skill"}
+  </button>
+</div>
+
+<div className="tag-box">
+  {formData.skills.map((skill) => (
+    <button
+      type="button"
+      key={skill}
+      className="tag"
+      onClick={() => removeSkill(skill)}
+    >
+      {skill} ×
+    </button>
+  ))}
+</div>
+
+{showSkillInput && (
+  <div className="add-item-row">
+    <input
+      type="text"
+      name="newSkill"
+      value={formData.newSkill}
+      onChange={handleChange}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          addSkill();
+        }
+      }}
+      placeholder="Enter a skill"
+    />
+
+    <button type="button" className="mini-button" onClick={addSkill}>
+      Save
+    </button>
+  </div>
+)}
+
+<div className="profile-subsection-row achievement-heading-row">
+  <label>Achievements</label>
+
+  <button
+    type="button"
+    className="mini-button"
+    onClick={() => setShowAchievementInput(!showAchievementInput)}
+  >
+    {showAchievementInput ? "Cancel" : "Add Achievement"}
+  </button>
+</div>
+
+<div className="achievement-tags">
+  {formData.achievements.map((achievement) => (
+    <button
+      type="button"
+      key={achievement}
+      className="achievement-pill"
+      onClick={() => removeAchievement(achievement)}
+    >
+      {achievement} ×
+    </button>
+  ))}
+</div>
+
+{showAchievementInput && (
+  <div className="add-item-row">
+    <input
+      type="text"
+      name="newAchievement"
+      value={formData.newAchievement}
+      onChange={handleChange}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          addAchievement();
+        }
+      }}
+      placeholder="Enter an achievement"
+    />
+
+    <button type="button" className="mini-button" onClick={addAchievement}>
+      Save
+    </button>
+  </div>
+)}
 
           <div className="section-title">
             <span></span>

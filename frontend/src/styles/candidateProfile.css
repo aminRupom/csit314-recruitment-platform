@@ -311,6 +311,50 @@
   background-color: #b3bef0;
 }
 
+.profile-subsection-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.profile-subsection-row label {
+  font-size: 13px;
+  color: #ffffff;
+}
+
+.achievement-heading-row {
+  margin-top: 14px;
+}
+
+.add-item-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin-top: 8px;
+  margin-bottom: 10px;
+}
+
+.add-item-row input {
+  min-height: 28px;
+  border: 1px solid #aeb8f2;
+  border-radius: 5px;
+  background-color: #485083;
+  color: #ffffff;
+  padding: 6px 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+.add-item-row input::placeholder {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.add-item-row input:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(174, 184, 242, 0.25);
+}
+
 @media (max-width: 850px) {
   .candidate-profile {
     grid-template-columns: 1fr;

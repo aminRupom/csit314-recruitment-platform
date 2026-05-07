@@ -32,3 +32,15 @@ export async function registerCandidate(candidateData) {
     candidate: candidateData,
   };
 }
+
+// Employeer Data
+
+export async function registerEmployer(employerData) {
+  console.log("Employer account and job posting submitted:", employerData);
+
+  return {
+    success: true,
+    message: "Employer account and job posting created successfully.",
+    employer: employerData,
+  };
+}
