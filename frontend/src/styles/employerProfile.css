@@ -1,0 +1,353 @@
+* {
+  box-sizing: border-box;
+}
+
+.employer-profile-page {
+  min-height: 100vh;
+  width: 100vw;
+  background:
+    radial-gradient(circle at 25% 30%, rgba(42, 49, 105, 0.4), transparent 38%),
+    linear-gradient(135deg, #20275a 0%, #080c31 72%);
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.employer-profile-hero {
+  height: 294px;
+  position: relative;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.85);
+  padding: 22px 36px;
+}
+
+.employer-profile-hero h1 {
+  margin: 0;
+  font-size: 68px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.company-heading {
+  position: absolute;
+  top: 137px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.company-heading h2 {
+  margin: 0;
+  font-size: 45px;
+  line-height: 1.1;
+}
+
+.company-heading p {
+  margin: 0;
+  font-size: 45px;
+  line-height: 1.1;
+}
+
+.company-info-section {
+  position: relative;
+  min-height: 207px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.85);
+  padding: 36px 135px;
+}
+
+.company-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 90px;
+  max-width: 970px;
+  margin: 0 auto;
+}
+
+.info-column {
+  display: flex;
+  flex-direction: column;
+  gap: 23px;
+}
+
+.profile-field-row {
+  display: grid;
+  grid-template-columns: 155px 1fr;
+  align-items: center;
+  color: #f0f2ff;
+  font-size: 18px;
+}
+
+.profile-field-row label {
+  font-size: 18px;
+}
+
+.profile-field-row span {
+  font-size: 21px;
+}
+
+.empty-line {
+  display: block;
+  width: 210px;
+  height: 22px;
+  border-bottom: 2px solid white;
+  border-top: 2px solid white;
+}
+
+.password-row {
+  position: relative;
+}
+
+.password-view-button {
+  margin-left: 16px;
+  background: transparent;
+  border: none;
+  color: #dce0f5;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.profile-edit-button {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  width: 88px;
+  height: 37px;
+  border: 2px solid #dce0ff;
+  border-radius: 6px;
+  background: #aab3ee;
+  color: #0d1028;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.profile-edit-button span {
+  margin-left: 8px;
+}
+
+.job-info-section {
+  position: relative;
+  padding: 31px 135px 38px;
+  min-height: 710px;
+}
+
+.job-edit-button {
+  top: 18px;
+}
+
+.job-form-content {
+  max-width: 940px;
+}
+
+.job-profile-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  color: #f0f2ff;
+  font-size: 18px;
+}
+
+.job-profile-row strong {
+  margin-right: 4px;
+}
+
+.job-profile-row span {
+  font-size: 18px;
+}
+
+.job-description-block {
+  margin: 0 0 26px;
+  color: #f0f2ff;
+  font-size: 18px;
+}
+
+.job-description-block strong {
+  display: block;
+  margin-bottom: 22px;
+}
+
+.description-lines {
+  width: 930px;
+  height: 34px;
+  border-top: 2px solid white;
+  border-bottom: 2px solid white;
+}
+
+.array-section {
+  margin-bottom: 24px;
+  color: #f0f2ff;
+  font-size: 18px;
+}
+
+.array-section strong {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.array-section ul {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.array-section li {
+  font-size: 21px;
+  color: rgba(240, 242, 255, 0.82);
+}
+
+.employer-profile-page input,
+.employer-profile-page select,
+.employer-profile-page textarea {
+  background: #444d82;
+  color: #f3f5ff;
+  border: 2px solid rgba(12, 17, 48, 0.75);
+  border-radius: 5px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 20px;
+  outline: none;
+  padding: 4px 9px;
+}
+
+.employer-profile-page input {
+  height: 35px;
+}
+
+.employer-profile-page textarea {
+  width: 225px;
+  height: 34px;
+  resize: none;
+}
+
+.employer-profile-page select {
+  height: 35px;
+  cursor: pointer;
+}
+
+.profile-field-row input {
+  max-width: 230px;
+}
+
+.password-input-wrapper {
+  display: flex;
+  align-items: center;
+  width: 210px;
+  background: #444d82;
+  border: 2px solid rgba(12, 17, 48, 0.75);
+  border-radius: 5px;
+}
+
+.password-input-wrapper input {
+  width: 170px;
+  border: none;
+  background: transparent;
+}
+
+.password-input-wrapper button {
+  background: transparent;
+  border: none;
+  color: #dce0f5;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.job-profile-row input {
+  width: 830px;
+}
+
+.job-profile-row select {
+  width: auto;
+}
+
+.job-description-block textarea {
+  width: 920px;
+  height: 57px;
+}
+
+.editable-list-item {
+  display: flex;
+  align-items: center;
+  width: 410px;
+  height: 33px;
+  margin-bottom: 7px;
+  background: #444d82;
+  border: 2px solid rgba(12, 17, 48, 0.75);
+  border-radius: 5px;
+}
+
+.editable-list-item input {
+  width: 100%;
+  border: none;
+  background: transparent;
+}
+
+.editable-list-item button {
+  width: 35px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.add-item-button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: rgba(240, 242, 255, 0.68);
+  font-size: 17px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.salary-input {
+  width: 100px !important;
+}
+
+.save-profile-button {
+  position: absolute;
+  right: 50px;
+  bottom: 39px;
+  width: 86px;
+  height: 34px;
+  border: none;
+  border-radius: 6px;
+  background: #aab3ee;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .employer-profile-hero h1 {
+    font-size: 48px;
+  }
+
+  .company-heading h2,
+  .company-heading p {
+    font-size: 35px;
+  }
+
+  .company-info-section,
+  .job-info-section {
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+
+  .company-info-grid {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .job-profile-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .job-profile-row input,
+  .job-description-block textarea,
+  .description-lines {
+    width: 100%;
+  }
+
+  .editable-list-item {
+    width: 100%;
+  }
+}

@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import CandidateSignup from "./pages/CandidateSignup";
 import EmployerSignup from "./pages/EmployerSignup";
+import EmployerDashboard from "./pages/EmployerDashboard";
+import EmployerProfile from "./pages/EmployerProfile";
 
 function App() {
   return (
@@ -13,7 +15,8 @@ function App() {
       <Route path="/signup/employer" element={<EmployerSignup />} />
 
       <Route path="/candidate-dashboard" element={<h1>Candidate Dashboard</h1>} />
-      <Route path="/employer-dashboard" element={<h1>Employer Dashboard</h1>} />
+      <Route path="/employer-dashboard" element={<EmployerDashboard />} />
+      <Route path="/employer-profile" element={<EmployerProfile />} />
     </Routes>
   );
 }
