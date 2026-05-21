@@ -248,6 +248,7 @@ function RecommendationPanel({ onClose }) {
   const minTopK = 1;
   const maxTopK = 10;
   const topKPosition = ((topK - minTopK) / (maxTopK - minTopK)) * 100;
+  const showTopKValue = topK > minTopK && topK < maxTopK;
 
   return (
     <div className="recommendation-panel">
@@ -258,12 +259,14 @@ function RecommendationPanel({ onClose }) {
       <p className="recommendation-title">Top-K recommendations</p>
 
       <div className="recommendation-range">
-        <span
-          className="range-current-value"
-          style={{ left: `${topKPosition}%` }}
-        >
-          {topK}
-        </span>
+        {showTopKValue && (
+          <span
+            className="range-current-value"
+            style={{ left: `${topKPosition}%` }}
+          >
+            {topK}
+          </span>
+        )}
 
         <input
           type="range"
