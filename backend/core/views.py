@@ -109,6 +109,54 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from .models import CandidateProfile
 from .serializers import CandidateProfileSerializer
 from .permissions import IsCandidate
+from .filters import JobPostingFilter, CandidateProfileFilter
+
+FUZZY_THRESHOLD = 60
+FUZZY_PREFETCH = 100
+
+
+class FuzzySearchMixin:
+    """
+    Adds ?fuzzy=true support to ListAPIView subclasses.
+
+    When active, structural filters are applied at the database level but the
+    keyword search filter is bypassed. The top FUZZY_PREFETCH results are
+    fetched into Python and re-ranked using rapidfuzz. Entries below
+    FUZZY_THRESHOLD are dropped before pagination.
+    """
+
+    def _fuzzy_text(self, obj):
+        raise NotImplementedError
+
+    def list(self, request, *args, **kwargs):
+        fuzzy = request.query_params.get("fuzzy", "").lower() == "true"
+        query = request.query_params.get("search", "")
+
+        if fuzzy and query:
+            from rapidfuzz import fuzz
+
+            qs = self.get_queryset()
+            # Apply structural filters only — skip SearchFilter
+            for backend in self.filter_backends:
+                if not issubclass(backend, filters.SearchFilter):
+                    qs = backend().filter_queryset(request, qs, self)
+
+            pool = list(qs[:FUZZY_PREFETCH])
+            scored = sorted(
+                ((obj, fuzz.partial_ratio(query, self._fuzzy_text(obj))) for obj in pool),
+                key=lambda x: x[1],
+                reverse=True,
+            )
+            result = [obj for obj, score in scored if score >= FUZZY_THRESHOLD]
+
+            page = self.paginate_queryset(result)
+            if page is not None:
+                return self.get_paginated_response(
+                    self.get_serializer(page, many=True).data
+                )
+            return Response(self.get_serializer(result, many=True).data)
+
+        return super().list(request, *args, **kwargs)
 
 
 @extend_schema(
@@ -253,17 +301,27 @@ class EmployerJobDetail(RetrieveUpdateDestroyAPIView):
 # Job postings — public/candidate side (browse + search)
 # ---------------------------------------------------------------------------
 
-class PublicJobList(ListAPIView):
+class PublicJobList(FuzzySearchMixin, ListAPIView):
     """
-    GET /api/jobs/                  →  list all jobs
-    GET /api/jobs/?search=python    →  keyword search across title / description / skills
+    GET /api/jobs/                                     →  list all jobs
+    GET /api/jobs/?search=python                       →  keyword search
+    GET /api/jobs/?search=Pyhton&fuzzy=true            →  fuzzy keyword search
+    GET /api/jobs/?work_mode=REMOTE&employment_type=FULL_TIME  →  structured filters
+    GET /api/jobs/?salary_min=50000&salary_max=120000  →  salary range filter
+    GET /api/jobs/?min_experience=3                    →  minimum experience filter
+    GET /api/jobs/?location=Sydney                     →  location filter (icontains)
     """
     serializer_class = JobPostingSerializer
     permission_classes = [IsAuthenticated]
     queryset = JobPosting.objects.all().order_by("-created_at")
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ["title", "description", "required_skills", "company_name"]
-    filterset_fields = ["work_mode", "required_education", "employment_type"]
+    filterset_class = JobPostingFilter
+
+    def _fuzzy_text(self, job):
+        return " ".join(filter(None, [
+            job.title, job.description, job.required_skills, job.company_name
+        ]))
 
 
 class PublicJobDetail(RetrieveAPIView):
@@ -275,28 +333,25 @@ class PublicJobDetail(RetrieveAPIView):
 
 # Candidate browsing from employer side
 
-class EmployerCandidateList(ListAPIView):
+class EmployerCandidateList(FuzzySearchMixin, ListAPIView):
     """
-    GET /api/candidates/                                        →  list all candidates
-    GET /api/candidates/?search=python                          →  keyword search
-    GET /api/candidates/?education=BACHELOR&min_experience=2    →  filter
+    GET /api/candidates/                                         →  list all candidates
+    GET /api/candidates/?search=python                           →  keyword search
+    GET /api/candidates/?search=Pyhton&fuzzy=true               →  fuzzy keyword search
+    GET /api/candidates/?education=BACHELOR&min_experience=2     →  structured filters
+    GET /api/candidates/?skills=python                           →  skill containment filter
     """
     serializer_class = CandidateProfileSerializer
     permission_classes = [IsEmployer]
     queryset = CandidateProfile.objects.all().order_by("-updated_at")
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ["full_name", "major", "skills"]
-    filterset_fields = ["education"]
+    filterset_class = CandidateProfileFilter
 
-    def get_queryset(self):
-        qs = super().get_queryset()
-        min_exp = self.request.query_params.get("min_experience")
-        if min_exp is not None:
-            try:
-                qs = qs.filter(years_experience__gte=int(min_exp))
-            except ValueError:
-                pass
-        return qs
+    def _fuzzy_text(self, candidate):
+        return " ".join(filter(None, [
+            candidate.full_name, candidate.major, candidate.skills
+        ]))
 
 
 class EmployerCandidateDetail(RetrieveAPIView):
