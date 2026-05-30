@@ -5,6 +5,12 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 
 
+class WorkMode(models.TextChoices):
+    REMOTE = "REMOTE", "Remote"
+    ONSITE = "ONSITE", "On-site"
+    HYBRID = "HYBRID", "Hybrid"
+
+
 # 1. Custom User model — extends Django's AbstractUser to add a role field
 class User(AbstractUser):
     """
@@ -63,11 +69,24 @@ class CandidateProfile(models.Model):
     major = models.CharField(max_length=200)
     years_experience = models.PositiveIntegerField(default=0)
 
-    # Free-text skills field — used by recommendation engine
-    skills = models.TextField(
+    skills = models.CharField(
+        max_length=500,
         blank=True,
-        help_text="Comma-separated skills, e.g. 'Python, Django, Machine Learning'",
+        help_text="Comma-separated skills, e.g. 'python, django, machine learning'",
     )
+
+    work_experience = models.TextField(
+        blank=True,
+        help_text="Free-text description of previous roles and responsibilities",
+    )
+
+    preferred_work_mode = models.CharField(
+        max_length=10,
+        choices=WorkMode.choices,
+        blank=True,
+    )
+
+    preferred_location = models.CharField(max_length=200, blank=True)
 
     # Optional bio for richer recommendation matching
     bio = models.TextField(blank=True)
@@ -77,6 +96,11 @@ class CandidateProfile(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if self.skills:
+            self.skills = self.skills.lower()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.full_name
@@ -95,11 +119,6 @@ class JobPosting(models.Model):
     - Work mode (Remote / On-site / Hybrid)
     - Job location
     """
-
-    class WorkMode(models.TextChoices):
-        REMOTE = "REMOTE", "Remote"
-        ONSITE = "ONSITE", "On-site"
-        HYBRID = "HYBRID", "Hybrid"
 
     class EducationLevel(models.TextChoices):
         HIGH_SCHOOL = "HIGH_SCHOOL", "High School"
