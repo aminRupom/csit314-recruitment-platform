@@ -68,7 +68,7 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
             "resume": {"required": False, "write_only": True},
         }
 
-    def get_resume_url(self, obj):
+    def get_resume_url(self, obj) -> str | None:
         """Return absolute URL to the resume file, or None if not uploaded."""
         request = self.context.get("request")
         if obj.resume and request:

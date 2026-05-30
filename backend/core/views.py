@@ -14,7 +14,23 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIV
 from .permissions import IsEmployer
 from .models import JobPosting, CandidateProfile
 from .serializers import JobPostingSerializer, CandidateProfileSerializer
+from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_serializer
+from rest_framework import serializers as drf_serializers
 
+@extend_schema(
+    request=RegisterSerializer,
+    responses={
+        201: inline_serializer(
+            name="RegisterResponse",
+            fields={
+                "user": UserSerializer(),
+                "access": drf_serializers.CharField(),
+                "refresh": drf_serializers.CharField(),
+            },
+        )
+    },
+    summary="Register a new user",
+)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def register(request):
@@ -39,6 +55,14 @@ def register(request):
     )
 
 
+@extend_schema(
+    request=inline_serializer(
+        name="LogoutRequest",
+        fields={"refresh": drf_serializers.CharField()},
+    ),
+    responses={205: OpenApiResponse(description="Successfully logged out.")},
+    summary="Logout and blacklist the refresh token",
+)
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def logout(request):
@@ -68,6 +92,7 @@ def logout(request):
         )
 
 
+@extend_schema(responses=UserSerializer, summary="Return the current authenticated user")
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def me(request):
@@ -86,6 +111,23 @@ from .serializers import CandidateProfileSerializer
 from .permissions import IsCandidate
 
 
+@extend_schema(
+    methods=["GET"],
+    responses=CandidateProfileSerializer,
+    summary="Retrieve the logged-in candidate's profile",
+)
+@extend_schema(
+    methods=["POST"],
+    request=CandidateProfileSerializer,
+    responses={201: CandidateProfileSerializer},
+    summary="Create the candidate's profile",
+)
+@extend_schema(
+    methods=["PUT"],
+    request=CandidateProfileSerializer,
+    responses=CandidateProfileSerializer,
+    summary="Update the candidate's profile",
+)
 @api_view(["GET", "POST", "PUT"])
 @permission_classes([IsCandidate])
 def candidate_profile(request):
@@ -134,6 +176,14 @@ def candidate_profile(request):
     return Response(serializer.data)
 
 
+@extend_schema(
+    request=inline_serializer(
+        name="ResumeUploadRequest",
+        fields={"resume": drf_serializers.FileField()},
+    ),
+    responses=CandidateProfileSerializer,
+    summary="Upload or replace the candidate's resume file",
+)
 @api_view(["POST"])
 @permission_classes([IsCandidate])
 def upload_resume(request):
@@ -177,6 +227,8 @@ class EmployerJobListCreate(ListCreateAPIView):
     permission_classes = [IsEmployer]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return JobPosting.objects.none()
         return JobPosting.objects.filter(employer=self.request.user).order_by("-created_at")
 
     def perform_create(self, serializer):
@@ -261,6 +313,10 @@ from .recommendations import (
 )
 
 
+@extend_schema(
+    responses={200: JobPostingSerializer(many=True)},
+    summary="Top-10 job recommendations for the logged-in candidate",
+)
 @api_view(["GET"])
 @permission_classes([IsCandidate])
 def recommendations_for_candidate(request):
@@ -282,6 +338,10 @@ def recommendations_for_candidate(request):
     return Response(serializer.data)
 
 
+@extend_schema(
+    responses={200: CandidateProfileSerializer(many=True)},
+    summary="Top-10 candidate recommendations for a job posting",
+)
 @api_view(["GET"])
 @permission_classes([IsEmployer])
 def recommendations_for_employer(request, job_id):
@@ -308,6 +368,14 @@ from .models import Application
 from .serializers import ApplicationSerializer
 
 
+@extend_schema(
+    request=inline_serializer(
+        name="ApplyToJobRequest",
+        fields={"cover_message": drf_serializers.CharField(required=False, allow_blank=True)},
+    ),
+    responses={201: ApplicationSerializer},
+    summary="Apply to a job posting",
+)
 @api_view(["POST"])
 @permission_classes([IsCandidate])
 def apply_to_job(request, job_id):
@@ -345,6 +413,10 @@ def apply_to_job(request, job_id):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema(
+    responses={200: ApplicationSerializer(many=True)},
+    summary="List all applications submitted by the logged-in candidate",
+)
 @api_view(["GET"])
 @permission_classes([IsCandidate])
 def my_applications(request):
@@ -363,6 +435,10 @@ def my_applications(request):
     return Response(serializer.data)
 
 
+@extend_schema(
+    responses={200: ApplicationSerializer(many=True)},
+    summary="List all applications received for the employer's job postings",
+)
 @api_view(["GET"])
 @permission_classes([IsEmployer])
 def applications_to_my_jobs(request):

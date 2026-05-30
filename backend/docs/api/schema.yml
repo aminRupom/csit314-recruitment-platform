@@ -1,0 +1,1085 @@
+openapi: 3.0.3
+info:
+  title: Intelligent Talent Matching Platform API
+  version: 1.0.0
+  description: REST API for candidate profiles, job postings, and AI-powered recommendations.
+paths:
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: |-
+        POST /api/auth/logout/
+
+        Body: { "refresh": "<refresh_token>" }
+        Blacklists the refresh token so it can't be used again.
+      summary: Logout and blacklist the refresh token
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '205':
+          description: Successfully logged out.
+  /api/auth/me/:
+    get:
+      operationId: auth_me_retrieve
+      description: |-
+        GET /api/auth/me/
+
+        Returns the currently authenticated user's info.
+        Useful for the frontend to verify a token is valid and get role info.
+      summary: Return the current authenticated user
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/auth/refresh/:
+    post:
+      operationId: auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: |-
+        POST /api/auth/register/
+
+        Body: { "username": "...", "email": "...", "password": "...", "role": "CANDIDATE" | "EMPLOYER" }
+        Returns: 201 with user info + JWT tokens
+      summary: Register a new user
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+          description: ''
+  /api/candidate/applications/:
+    get:
+      operationId: candidate_applications_list
+      description: |-
+        GET /api/candidate/applications/
+
+        Returns all applications submitted by the logged-in candidate.
+      summary: List all applications submitted by the logged-in candidate
+      tags:
+      - candidate
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Application'
+          description: ''
+  /api/candidate/profile/:
+    get:
+      operationId: candidate_profile_retrieve
+      description: |-
+        GET   /api/candidate/profile/   →  retrieve own profile
+        POST  /api/candidate/profile/   →  create (first time only)
+        PUT   /api/candidate/profile/   →  update existing
+      summary: Retrieve the logged-in candidate's profile
+      tags:
+      - candidate
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateProfile'
+          description: ''
+    post:
+      operationId: candidate_profile_create
+      description: |-
+        GET   /api/candidate/profile/   →  retrieve own profile
+        POST  /api/candidate/profile/   →  create (first time only)
+        PUT   /api/candidate/profile/   →  update existing
+      summary: Create the candidate's profile
+      tags:
+      - candidate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CandidateProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CandidateProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CandidateProfile'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateProfile'
+          description: ''
+    put:
+      operationId: candidate_profile_update
+      description: |-
+        GET   /api/candidate/profile/   →  retrieve own profile
+        POST  /api/candidate/profile/   →  create (first time only)
+        PUT   /api/candidate/profile/   →  update existing
+      summary: Update the candidate's profile
+      tags:
+      - candidate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CandidateProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CandidateProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CandidateProfile'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateProfile'
+          description: ''
+  /api/candidate/profile/upload-resume/:
+    post:
+      operationId: candidate_profile_upload_resume_create
+      description: |-
+        POST /api/candidate/profile/upload-resume/
+
+        Body: multipart form with 'resume' file field.
+        Returns: updated profile with resume_url.
+      summary: Upload or replace the candidate's resume file
+      tags:
+      - candidate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResumeUploadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResumeUploadRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResumeUploadRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateProfile'
+          description: ''
+  /api/candidates/:
+    get:
+      operationId: candidates_list
+      description: |-
+        GET /api/candidates/                                        →  list all candidates
+        GET /api/candidates/?search=python                          →  keyword search
+        GET /api/candidates/?education=BACHELOR&min_experience=2    →  filter
+      parameters:
+      - in: query
+        name: education
+        schema:
+          type: string
+          enum:
+          - BACHELOR
+          - DIPLOMA
+          - HIGH_SCHOOL
+          - MASTER
+          - PHD
+        description: |-
+          * `HIGH_SCHOOL` - High School
+          * `DIPLOMA` - Diploma
+          * `BACHELOR` - Bachelor's Degree
+          * `MASTER` - Master's Degree
+          * `PHD` - PhD
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - candidates
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CandidateProfile'
+          description: ''
+  /api/candidates/{id}/:
+    get:
+      operationId: candidates_retrieve
+      description: GET /api/candidates/<id>/  →  view a single candidate profile
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - candidates
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateProfile'
+          description: ''
+  /api/employer/applications/:
+    get:
+      operationId: employer_applications_list
+      description: |-
+        GET /api/employer/applications/
+
+        Returns all applications to jobs posted by the logged-in employer.
+      summary: List all applications received for the employer's job postings
+      tags:
+      - employer
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Application'
+          description: ''
+  /api/employer/jobs/:
+    get:
+      operationId: employer_jobs_list
+      description: |-
+        GET   /api/employer/jobs/   →  list own jobs
+        POST  /api/employer/jobs/   →  create new job
+      parameters:
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - employer
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobPosting'
+          description: ''
+    post:
+      operationId: employer_jobs_create
+      description: |-
+        GET   /api/employer/jobs/   →  list own jobs
+        POST  /api/employer/jobs/   →  create new job
+      tags:
+      - employer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobPosting'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JobPosting'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JobPosting'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPosting'
+          description: ''
+  /api/employer/jobs/{id}/:
+    get:
+      operationId: employer_jobs_retrieve
+      description: |-
+        GET    /api/employer/jobs/<id>/   →  view own job
+        PUT    /api/employer/jobs/<id>/   →  update own job
+        DELETE /api/employer/jobs/<id>/   →  delete own job
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - employer
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPosting'
+          description: ''
+    put:
+      operationId: employer_jobs_update
+      description: |-
+        GET    /api/employer/jobs/<id>/   →  view own job
+        PUT    /api/employer/jobs/<id>/   →  update own job
+        DELETE /api/employer/jobs/<id>/   →  delete own job
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - employer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobPosting'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JobPosting'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JobPosting'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPosting'
+          description: ''
+    patch:
+      operationId: employer_jobs_partial_update
+      description: |-
+        GET    /api/employer/jobs/<id>/   →  view own job
+        PUT    /api/employer/jobs/<id>/   →  update own job
+        DELETE /api/employer/jobs/<id>/   →  delete own job
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - employer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedJobPosting'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedJobPosting'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedJobPosting'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPosting'
+          description: ''
+    delete:
+      operationId: employer_jobs_destroy
+      description: |-
+        GET    /api/employer/jobs/<id>/   →  view own job
+        PUT    /api/employer/jobs/<id>/   →  update own job
+        DELETE /api/employer/jobs/<id>/   →  delete own job
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - employer
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/jobs/:
+    get:
+      operationId: jobs_list
+      description: |-
+        GET /api/jobs/                  →  list all jobs
+        GET /api/jobs/?search=python    →  keyword search across title / description / skills
+      parameters:
+      - in: query
+        name: required_education
+        schema:
+          type: string
+          enum:
+          - BACHELOR
+          - DIPLOMA
+          - HIGH_SCHOOL
+          - MASTER
+          - PHD
+        description: |-
+          * `HIGH_SCHOOL` - High School
+          * `DIPLOMA` - Diploma
+          * `BACHELOR` - Bachelor's Degree
+          * `MASTER` - Master's Degree
+          * `PHD` - PhD
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: work_mode
+        schema:
+          type: string
+          enum:
+          - HYBRID
+          - ONSITE
+          - REMOTE
+        description: |-
+          * `REMOTE` - Remote
+          * `ONSITE` - On-site
+          * `HYBRID` - Hybrid
+      tags:
+      - jobs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobPosting'
+          description: ''
+  /api/jobs/{job_id}/apply/:
+    post:
+      operationId: jobs_apply_create
+      description: |-
+        POST /api/jobs/<job_id>/apply/
+
+        Body: { "cover_message": "..." }   (optional)
+        Records an application linking the logged-in candidate to the job.
+      summary: Apply to a job posting
+      parameters:
+      - in: path
+        name: job_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyToJobRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ApplyToJobRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApplyToJobRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+          description: ''
+  /api/jobs/{id}/:
+    get:
+      operationId: jobs_retrieve
+      description: GET /api/jobs/<id>/  →  view a single job
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - jobs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPosting'
+          description: ''
+  /api/recommendations/candidates/{job_id}/:
+    get:
+      operationId: recommendations_candidates_list
+      description: |-
+        GET /api/recommendations/candidates/<job_id>/
+
+        Returns the Top-10 candidates ranked for the given job posting.
+        Only the employer who owns the job can request this.
+      summary: Top-10 candidate recommendations for a job posting
+      parameters:
+      - in: path
+        name: job_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - recommendations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CandidateProfile'
+          description: ''
+  /api/recommendations/jobs/:
+    get:
+      operationId: recommendations_jobs_list
+      description: |-
+        GET /api/recommendations/jobs/
+
+        Returns the Top-10 jobs ranked for the logged-in candidate.
+      summary: Top-10 job recommendations for the logged-in candidate
+      tags:
+      - recommendations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobPosting'
+          description: ''
+components:
+  schemas:
+    Application:
+      type: object
+      description: |-
+        Used by all application endpoints.
+        Includes nested job + candidate info so the frontend doesn't need extra calls.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        job:
+          type: integer
+          writeOnly: true
+        job_title:
+          type: string
+          readOnly: true
+        company_name:
+          type: string
+          readOnly: true
+        candidate_id:
+          type: integer
+          readOnly: true
+        candidate_name:
+          type: string
+          readOnly: true
+        cover_message:
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        applied_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - applied_at
+      - candidate_id
+      - candidate_name
+      - company_name
+      - id
+      - job
+      - job_title
+      - status
+    ApplyToJobRequest:
+      type: object
+      properties:
+        cover_message:
+          type: string
+    CandidateProfile:
+      type: object
+      description: |-
+        Used by GET / POST / PUT /api/candidate/profile/
+
+        Returns:
+          - all profile fields
+          - resume file URL (if uploaded)
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        full_name:
+          type: string
+          maxLength: 200
+        contact_email:
+          type: string
+          format: email
+          maxLength: 254
+        contact_phone:
+          type: string
+          maxLength: 30
+        education:
+          $ref: '#/components/schemas/EducationEnum'
+        major:
+          type: string
+          maxLength: 200
+        years_experience:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        skills:
+          type: string
+          description: Comma-separated skills, e.g. 'Python, Django, Machine Learning'
+        resume:
+          type: string
+          format: uri
+          writeOnly: true
+          nullable: true
+        resume_url:
+          type: string
+          nullable: true
+          description: Return absolute URL to the resume file, or None if not uploaded.
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - contact_email
+      - created_at
+      - full_name
+      - id
+      - major
+      - resume_url
+      - updated_at
+    EducationEnum:
+      enum:
+      - HIGH_SCHOOL
+      - DIPLOMA
+      - BACHELOR
+      - MASTER
+      - PHD
+      type: string
+      description: |-
+        * `HIGH_SCHOOL` - High School
+        * `DIPLOMA` - Diploma
+        * `BACHELOR` - Bachelor's Degree
+        * `MASTER` - Master's Degree
+        * `PHD` - PhD
+    JobPosting:
+      type: object
+      description: |-
+        Used by all job posting endpoints.
+        Returns the employer's company name for display purposes.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        company_name:
+          type: string
+          maxLength: 200
+        company_info:
+          type: string
+          description: About the company — used in employer profile display
+        description:
+          type: string
+          description: Full job description (JD)
+        required_education:
+          $ref: '#/components/schemas/RequiredEducationEnum'
+        required_skills:
+          type: string
+          description: Comma-separated required skills, e.g. 'Python, Django, REST
+            API'
+        required_experience_years:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        work_mode:
+          $ref: '#/components/schemas/WorkModeEnum'
+        location:
+          type: string
+          maxLength: 200
+        employer_username:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - company_info
+      - company_name
+      - created_at
+      - description
+      - employer_username
+      - id
+      - location
+      - required_skills
+      - title
+      - updated_at
+    LogoutRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+      required:
+      - refresh
+    PatchedJobPosting:
+      type: object
+      description: |-
+        Used by all job posting endpoints.
+        Returns the employer's company name for display purposes.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        company_name:
+          type: string
+          maxLength: 200
+        company_info:
+          type: string
+          description: About the company — used in employer profile display
+        description:
+          type: string
+          description: Full job description (JD)
+        required_education:
+          $ref: '#/components/schemas/RequiredEducationEnum'
+        required_skills:
+          type: string
+          description: Comma-separated required skills, e.g. 'Python, Django, REST
+            API'
+        required_experience_years:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        work_mode:
+          $ref: '#/components/schemas/WorkModeEnum'
+        location:
+          type: string
+          maxLength: 200
+        employer_username:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    Register:
+      type: object
+      description: |-
+        Used by POST /api/auth/register/
+
+        Accepts:
+          - username, email, password (required)
+          - role: 'CANDIDATE' or 'EMPLOYER' (required)
+      properties:
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+      required:
+      - email
+      - password
+      - role
+      - username
+    RegisterResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        access:
+          type: string
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+      - user
+    RequiredEducationEnum:
+      enum:
+      - HIGH_SCHOOL
+      - DIPLOMA
+      - BACHELOR
+      - MASTER
+      - PHD
+      type: string
+      description: |-
+        * `HIGH_SCHOOL` - High School
+        * `DIPLOMA` - Diploma
+        * `BACHELOR` - Bachelor's Degree
+        * `MASTER` - Master's Degree
+        * `PHD` - PhD
+    ResumeUploadRequest:
+      type: object
+      properties:
+        resume:
+          type: string
+          format: uri
+      required:
+      - resume
+    RoleEnum:
+      enum:
+      - CANDIDATE
+      - EMPLOYER
+      type: string
+      description: |-
+        * `CANDIDATE` - Candidate
+        * `EMPLOYER` - Employer
+    StatusEnum:
+      enum:
+      - PENDING
+      - REVIEWED
+      - ACCEPTED
+      - REJECTED
+      type: string
+      description: |-
+        * `PENDING` - Pending
+        * `REVIEWED` - Reviewed
+        * `ACCEPTED` - Accepted
+        * `REJECTED` - Rejected
+    TokenObtainPair:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - password
+      - refresh
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    User:
+      type: object
+      description: |-
+        Used by GET /api/auth/me/ — returns the current user's basic info.
+        Never exposes the password hash.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - date_joined
+      - id
+      - username
+    WorkModeEnum:
+      enum:
+      - REMOTE
+      - ONSITE
+      - HYBRID
+      type: string
+      description: |-
+        * `REMOTE` - Remote
+        * `ONSITE` - On-site
+        * `HYBRID` - Hybrid
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
