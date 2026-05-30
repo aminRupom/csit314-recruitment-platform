@@ -6,8 +6,10 @@ Covers:
   - Empty database returns empty list
   - Returns at most top_k results
   - Ranks relevant jobs higher than irrelevant ones
+  - Membership bypasses the Top-K / Top-N cap
 """
 import pytest
+from rest_framework.test import APIClient
 from core.models import User, CandidateProfile, JobPosting
 from core.recommendations import (
     recommend_jobs_for_candidate,
@@ -109,3 +111,109 @@ def test_recommend_candidates_for_job(candidate_profile, employer):
     )
     results = recommend_candidates_for_job(job, top_n=10)
     assert candidate_profile in results
+
+
+def _make_job(employer, i):
+    return JobPosting.objects.create(
+        title=f"Python Developer {i}",
+        company_name="Acme",
+        description="Build Django REST APIs for production systems",
+        required_skills="Python, Django, REST",
+        required_experience_years=2,
+        required_education="BACHELOR",
+        work_mode="REMOTE",
+        location="Sydney",
+        employer=employer,
+    )
+
+
+def _make_candidate(i):
+    user = User.objects.create_user(
+        username=f"cand_{i}", password="x", role="CANDIDATE"
+    )
+    return CandidateProfile.objects.create(
+        user=user,
+        full_name=f"Candidate {i}",
+        contact_email=f"c{i}@test.com",
+        major="Computer Science",
+        skills="python django rest",
+        years_experience=3,
+        education="BACHELOR",
+    )
+
+
+@pytest.mark.django_db
+def test_non_member_candidate_recommendation_capped(employer):
+    cand_user = User.objects.create_user(
+        username="nonmember_cand", password="x", role="CANDIDATE"
+    )
+    profile = CandidateProfile.objects.create(
+        user=cand_user,
+        full_name="Non Member",
+        contact_email="nm@test.com",
+        major="Computer Science",
+        skills="python django rest",
+        years_experience=3,
+        education="BACHELOR",
+    )
+    for i in range(15):
+        _make_job(employer, i)
+
+    client = APIClient()
+    client.force_authenticate(user=cand_user)
+    response = client.get("/api/recommendations/jobs/")
+    assert response.status_code == 200
+    assert len(response.data) <= 10
+
+
+@pytest.mark.django_db
+def test_member_candidate_recommendation_uncapped(employer):
+    cand_user = User.objects.create_user(
+        username="member_cand", password="x", role="CANDIDATE", membership=True
+    )
+    CandidateProfile.objects.create(
+        user=cand_user,
+        full_name="Member",
+        contact_email="m@test.com",
+        major="Computer Science",
+        skills="python django rest",
+        years_experience=3,
+        education="BACHELOR",
+    )
+    for i in range(15):
+        _make_job(employer, i)
+
+    client = APIClient()
+    client.force_authenticate(user=cand_user)
+    response = client.get("/api/recommendations/jobs/")
+    assert response.status_code == 200
+    assert len(response.data) > 10
+
+
+@pytest.mark.django_db
+def test_non_member_employer_recommendation_capped(employer):
+    job = _make_job(employer, 0)
+    for i in range(15):
+        _make_candidate(i)
+
+    client = APIClient()
+    client.force_authenticate(user=employer)
+    response = client.get(f"/api/recommendations/candidates/{job.id}/")
+    assert response.status_code == 200
+    assert len(response.data) <= 10
+
+
+@pytest.mark.django_db
+def test_member_employer_recommendation_uncapped():
+    member_employer = User.objects.create_user(
+        username="member_emp", password="x", role="EMPLOYER", membership=True
+    )
+    job = _make_job(member_employer, 0)
+    for i in range(15):
+        _make_candidate(i)
+
+    client = APIClient()
+    client.force_authenticate(user=member_employer)
+    response = client.get(f"/api/recommendations/candidates/{job.id}/")
+    assert response.status_code == 200
+    assert len(response.data) > 10

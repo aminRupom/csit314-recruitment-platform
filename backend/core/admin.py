@@ -6,13 +6,13 @@ from .models import User, CandidateProfile, JobPosting, Application
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    list_display = ("username", "email", "role", "is_staff")
-    list_filter = ("role", "is_staff", "is_active")
+    list_display = ("username", "email", "role", "membership", "is_staff")
+    list_filter = ("role", "membership", "is_staff", "is_active")
     fieldsets = UserAdmin.fieldsets + (
-        ("Role", {"fields": ("role",)}),
+        ("Role & Membership", {"fields": ("role", "membership")}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ("Role", {"fields": ("role",)}),
+        ("Role & Membership", {"fields": ("role", "membership")}),
     )
 
 

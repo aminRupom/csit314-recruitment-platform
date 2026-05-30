@@ -333,7 +333,8 @@ def recommendations_for_candidate(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    jobs = recommend_jobs_for_candidate(profile, top_k=10)
+    top_k = None if request.user.membership else 10
+    jobs = recommend_jobs_for_candidate(profile, top_k=top_k)
     serializer = JobPostingSerializer(jobs, many=True, context={"request": request})
     return Response(serializer.data)
 
@@ -359,7 +360,8 @@ def recommendations_for_employer(request, job_id):
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    candidates = recommend_candidates_for_job(job, top_n=10)
+    top_n = None if request.user.membership else 10
+    candidates = recommend_candidates_for_job(job, top_n=top_n)
     serializer = CandidateProfileSerializer(candidates, many=True, context={"request": request})
     return Response(serializer.data)
 
