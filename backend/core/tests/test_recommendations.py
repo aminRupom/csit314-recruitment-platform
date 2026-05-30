@@ -113,6 +113,41 @@ def test_recommend_candidates_for_job(candidate_profile, employer):
     assert candidate_profile in results
 
 
+@pytest.mark.django_db
+def test_preference_boost_ranks_preferred_work_mode_higher(employer):
+    """Candidate prefers Remote — the Remote job should rank above an otherwise
+    identical On-site job after the preference boost is applied."""
+    user = User.objects.create_user(username="pref_cand", password="x", role="CANDIDATE")
+    candidate = CandidateProfile.objects.create(
+        user=user,
+        full_name="Pref Tester",
+        contact_email="pref@test.com",
+        major="Computer Science",
+        skills="python django rest",
+        years_experience=3,
+        education="BACHELOR",
+        preferred_work_mode="REMOTE",
+    )
+
+    common = dict(
+        company_name="Acme",
+        description="Build Django REST APIs for production systems",
+        required_skills="python, django, rest",
+        required_experience_years=3,
+        required_education="BACHELOR",
+        location="Sydney",
+        employer=employer,
+    )
+    remote_job = JobPosting.objects.create(title="Python Dev Remote", work_mode="REMOTE", **common)
+    onsite_job = JobPosting.objects.create(title="Python Dev Onsite", work_mode="ONSITE", **common)
+
+    results = recommend_jobs_for_candidate(candidate, top_k=10)
+
+    assert remote_job in results
+    assert onsite_job in results
+    assert results.index(remote_job) < results.index(onsite_job)
+
+
 def _make_job(employer, i):
     return JobPosting.objects.create(
         title=f"Python Developer {i}",
