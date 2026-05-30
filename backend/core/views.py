@@ -263,7 +263,7 @@ class PublicJobList(ListAPIView):
     queryset = JobPosting.objects.all().order_by("-created_at")
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ["title", "description", "required_skills", "company_name"]
-    filterset_fields = ["work_mode", "required_education"]
+    filterset_fields = ["work_mode", "required_education", "employment_type"]
 
 
 class PublicJobDetail(RetrieveAPIView):

@@ -127,6 +127,12 @@ class JobPosting(models.Model):
         MASTER = "MASTER", "Master's Degree"
         PHD = "PHD", "PhD"
 
+    class EmploymentType(models.TextChoices):
+        FULL_TIME = "FULL_TIME", "Full-time"
+        PART_TIME = "PART_TIME", "Part-time"
+        CONTRACT = "CONTRACT", "Contract"
+        INTERNSHIP = "INTERNSHIP", "Internship"
+
     employer = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -155,6 +161,14 @@ class JobPosting(models.Model):
         default=WorkMode.ONSITE,
     )
     location = models.CharField(max_length=200)
+
+    salary_min = models.PositiveIntegerField(null=True, blank=True)
+    salary_max = models.PositiveIntegerField(null=True, blank=True)
+    employment_type = models.CharField(
+        max_length=20,
+        choices=EmploymentType.choices,
+        default=EmploymentType.FULL_TIME,
+    )
 
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
