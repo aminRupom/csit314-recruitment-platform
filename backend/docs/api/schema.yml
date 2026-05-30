@@ -275,9 +275,11 @@ paths:
     get:
       operationId: candidates_list
       description: |-
-        GET /api/candidates/                                        →  list all candidates
-        GET /api/candidates/?search=python                          →  keyword search
-        GET /api/candidates/?education=BACHELOR&min_experience=2    →  filter
+        GET /api/candidates/                                         →  list all candidates
+        GET /api/candidates/?search=python                           →  keyword search
+        GET /api/candidates/?search=Pyhton&fuzzy=true               →  fuzzy keyword search
+        GET /api/candidates/?education=BACHELOR&min_experience=2     →  structured filters
+        GET /api/candidates/?skills=python                           →  skill containment filter
       parameters:
       - in: query
         name: education
@@ -295,10 +297,18 @@ paths:
           * `BACHELOR` - Bachelor's Degree
           * `MASTER` - Master's Degree
           * `PHD` - PhD
+      - in: query
+        name: min_experience
+        schema:
+          type: integer
       - name: search
         required: false
         in: query
         description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: skills
         schema:
           type: string
       tags:
@@ -526,9 +536,36 @@ paths:
     get:
       operationId: jobs_list
       description: |-
-        GET /api/jobs/                  →  list all jobs
-        GET /api/jobs/?search=python    →  keyword search across title / description / skills
+        GET /api/jobs/                                     →  list all jobs
+        GET /api/jobs/?search=python                       →  keyword search
+        GET /api/jobs/?search=Pyhton&fuzzy=true            →  fuzzy keyword search
+        GET /api/jobs/?work_mode=REMOTE&employment_type=FULL_TIME  →  structured filters
+        GET /api/jobs/?salary_min=50000&salary_max=120000  →  salary range filter
+        GET /api/jobs/?min_experience=3                    →  minimum experience filter
+        GET /api/jobs/?location=Sydney                     →  location filter (icontains)
       parameters:
+      - in: query
+        name: employment_type
+        schema:
+          type: string
+          enum:
+          - CONTRACT
+          - FULL_TIME
+          - INTERNSHIP
+          - PART_TIME
+        description: |-
+          * `FULL_TIME` - Full-time
+          * `PART_TIME` - Part-time
+          * `CONTRACT` - Contract
+          * `INTERNSHIP` - Internship
+      - in: query
+        name: location
+        schema:
+          type: string
+      - in: query
+        name: min_experience
+        schema:
+          type: integer
       - in: query
         name: required_education
         schema:
@@ -545,6 +582,14 @@ paths:
           * `BACHELOR` - Bachelor's Degree
           * `MASTER` - Master's Degree
           * `PHD` - PhD
+      - in: query
+        name: salary_max
+        schema:
+          type: integer
+      - in: query
+        name: salary_min
+        schema:
+          type: integer
       - name: search
         required: false
         in: query
@@ -733,6 +778,9 @@ components:
       properties:
         cover_message:
           type: string
+    BlankEnum:
+      enum:
+      - ''
     CandidateProfile:
       type: object
       description: |-
@@ -767,7 +815,18 @@ components:
           format: int64
         skills:
           type: string
-          description: Comma-separated skills, e.g. 'Python, Django, Machine Learning'
+          description: Comma-separated skills, e.g. 'python, django, machine learning'
+          maxLength: 500
+        work_experience:
+          type: string
+          description: Free-text description of previous roles and responsibilities
+        preferred_work_mode:
+          oneOf:
+          - $ref: '#/components/schemas/PreferredWorkModeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        preferred_location:
+          type: string
+          maxLength: 200
         resume:
           type: string
           format: uri
@@ -808,6 +867,18 @@ components:
         * `BACHELOR` - Bachelor's Degree
         * `MASTER` - Master's Degree
         * `PHD` - PhD
+    EmploymentTypeEnum:
+      enum:
+      - FULL_TIME
+      - PART_TIME
+      - CONTRACT
+      - INTERNSHIP
+      type: string
+      description: |-
+        * `FULL_TIME` - Full-time
+        * `PART_TIME` - Part-time
+        * `CONTRACT` - Contract
+        * `INTERNSHIP` - Internship
     JobPosting:
       type: object
       description: |-
@@ -845,6 +916,20 @@ components:
         location:
           type: string
           maxLength: 200
+        salary_min:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        salary_max:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        employment_type:
+          $ref: '#/components/schemas/EmploymentTypeEnum'
         employer_username:
           type: string
           readOnly: true
@@ -911,6 +996,20 @@ components:
         location:
           type: string
           maxLength: 200
+        salary_min:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        salary_max:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        employment_type:
+          $ref: '#/components/schemas/EmploymentTypeEnum'
         employer_username:
           type: string
           readOnly: true
@@ -922,6 +1021,16 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PreferredWorkModeEnum:
+      enum:
+      - REMOTE
+      - ONSITE
+      - HYBRID
+      type: string
+      description: |-
+        * `REMOTE` - Remote
+        * `ONSITE` - On-site
+        * `HYBRID` - Hybrid
     Register:
       type: object
       description: |-
