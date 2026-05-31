@@ -1,6 +1,6 @@
 # Contributing to the CSIT314 Recruitment Platform
 
-Welcome team! This guide explains how we work together on this codebase.
+How we work together on this codebase.
 
 ## Table of Contents
 
@@ -18,24 +18,24 @@ Welcome team! This guide explains how we work together on this codebase.
 ## Code of Conduct
 
 - Be respectful and constructive in code reviews
-- Communicate early if you are blocked or falling behind
-- Attend weekly stand-ups (or post async updates)
-- Keep all team discussions in the team Discord/Slack/Teams channel
+- Speak up early if you're blocked or falling behind
+- Attend weekly stand-ups, or post an async update
+- Keep team discussions in the team channel
 
 ---
 
 ## Getting Started
 
 1. Clone the repo: `git clone https://github.com/<org>/csit314-recruitment-platform.git`
-2. Follow the setup instructions in [README.md](README.md)
+2. Follow the setup in [README.md](README.md)
 3. Get added to the GitHub organisation and Project board
-4. Pick up an issue from the **To Do** column on the Project board
+4. Pick up an issue from the "To Do" column
 
 ---
 
 ## Branching Strategy
 
-We use a simplified **Git Flow**:
+Simplified Git Flow:
 
 ```
 main          ──●──────────●──────────●─►   (production-ready, tagged releases)
@@ -57,16 +57,16 @@ feature       ────●        ●        ●        (short-lived feature 
 
 ### Rules
 
-- **Never commit directly to `main` or `develop`** — always go through a PR
-- Keep feature branches **small and focused** (ideally < 400 lines changed)
-- Pull `develop` regularly into your feature branch to avoid merge conflicts
+- Never commit directly to `main` or `develop`, always go through a PR
+- Keep feature branches small and focused (ideally under 400 lines changed)
+- Pull `develop` into your branch often to avoid conflicts
 - Delete feature branches after merging
 
 ---
 
 ## Commit Messages
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/).
+[Conventional Commits](https://www.conventionalcommits.org/).
 
 ### Format
 
@@ -80,13 +80,13 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/).
 
 ### Types
 
-- `feat` — new feature
-- `fix` — bug fix
-- `docs` — documentation only
-- `style` — formatting, no code change
-- `refactor` — code change that neither fixes a bug nor adds a feature
-- `test` — adding or updating tests
-- `chore` — build/tooling changes
+- `feat`, new feature
+- `fix`, bug fix
+- `docs`, documentation only
+- `style`, formatting, no code change
+- `refactor`, no bug fix or new feature
+- `test`, adding or updating tests
+- `chore`, build or tooling changes
 
 ### Examples
 
@@ -116,24 +116,24 @@ docs: update setup instructions for Windows users
 ### Before opening a PR
 
 - [ ] Pull latest `develop` and rebase your branch
-- [ ] Run all tests locally — they must pass
-- [ ] Run linters and fix any warnings
-- [ ] Self-review your diff (look for debug prints, commented code, etc.)
+- [ ] All tests pass locally
+- [ ] Linters clean
+- [ ] Self-review the diff (debug prints, commented code, stray files)
 
 ### Opening the PR
 
 1. Push your branch: `git push origin feature/your-branch`
-2. Open a PR against `develop` (not `main`)
-3. Fill out the PR template completely
-4. Link the related issue (e.g., "Closes #15")
-5. Add at least **one reviewer**
-6. Move the corresponding card to **In Review** on the Project board
+2. Open a PR against `develop`, not `main`
+3. Fill out the PR template
+4. Link the issue (e.g., "Closes #15")
+5. Add at least one reviewer
+6. Move the card to "In Review" on the Project board
 
 ### Merging
 
-- A PR requires **at least one approval** before merging
+- At least one approval before merging
 - All CI checks must pass
-- Use **Squash and merge** to keep `develop` history clean
+- Use "Squash and merge" to keep `develop` history clean
 - Delete the branch after merging
 
 ---
@@ -142,49 +142,48 @@ docs: update setup instructions for Windows users
 
 ### As an author
 
-- Respond to all comments (even just with "done" or "thanks")
-- Don't take feedback personally — it's about the code
-- If you disagree, explain your reasoning rather than just rejecting
+- Respond to every comment (even just "done")
+- If you disagree, explain why rather than just closing the comment
 
 ### As a reviewer
 
-- Review within **24 hours** if possible
-- Be specific and constructive ("Could we extract this into a helper function?" vs "This is bad")
-- Approve when the code is good enough — perfect is the enemy of done
-- Use **Request changes** only for blocking issues
+- Review within 24 hours if possible
+- Be specific ("Could we extract this into a helper function?" beats "This is bad")
+- Approve when the code is good enough to ship
+- Use "Request changes" only for blocking issues
 
 ---
 
 ## Testing Requirements
 
-Per the subject's emphasis on **Test-Driven Development (Week 5)**:
+Per the subject's TDD emphasis (Week 5):
 
-- Every new feature must include tests
-- Bug fixes should include a regression test
-- Aim for **>70% code coverage** on new code
+- Every new feature ships with tests
+- Bug fixes include a regression test
+- Aim for over 70% coverage on new code
 - Tests must pass in CI before merging
 
 ### What to test
 
 - All public API endpoints (happy path + error cases)
-- Business logic in service/utility functions
+- Business logic in service or utility functions
 - Critical UI components (forms, recommendation display)
 
 ---
 
 ## Reporting Issues
 
-Use the GitHub Issues tab with the appropriate template:
+Use the GitHub Issues tab with the right template:
 
-- 🐛 **Bug Report** — something broken
-- ✨ **Feature Request** — new functionality
-- 📝 **Documentation** — docs unclear or missing
-- ❓ **Question** — need clarification
+- Bug Report, something broken
+- Feature Request, new functionality
+- Documentation, docs unclear or missing
+- Question, need clarification
 
-Add labels (`backend`, `frontend`, `priority-high`, etc.) and assign to the right milestone.
+Add labels (`backend`, `frontend`, `priority-high`) and assign to the right milestone.
 
 ---
 
-## Questions?
+## Questions
 
-Ask in the team chat or tag the group leader in your issue/PR.
+Ask in the team chat or tag the group leader in your issue or PR.
