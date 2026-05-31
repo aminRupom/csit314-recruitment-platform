@@ -76,9 +76,7 @@ Both roles support a membership flag. Non-members get the standard Top-10 cap on
 ```
 csit314-recruitment-platform/
 ├── .github/
-│   ├── workflows/              # GitHub Actions CI/CD pipelines
-│   ├── ISSUE_TEMPLATE/         # Issue templates (bug, feature)
-│   └── pull_request_template.md
+│   └── workflows/              # GitHub Actions CI/CD pipelines
 ├── backend/                    # Django REST API
 │   ├── recruitment/            # Django project (settings, urls)
 │   ├── core/                   # Models, views, serializers, filters, recommendations
