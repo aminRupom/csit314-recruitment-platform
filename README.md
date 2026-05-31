@@ -16,6 +16,7 @@ A web-based recruitment platform that connects employers with job candidates. Em
 - [Team Members](#team-members)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
+- [API Documentation](#api-documentation)
 - [Development Workflow](#development-workflow)
 - [Testing](#testing)
 - [CI/CD](#cicd)
@@ -25,18 +26,21 @@ A web-based recruitment platform that connects employers with job candidates. Em
 
 ## Project Overview
 
-The platform supports two main user roles:
+The platform supports two main user roles.
 
 Employers can:
-- Publish job postings with detailed descriptions, required skills, education level, and work mode (Remote/On-site/Hybrid)
-- Browse candidate profiles (filtered by skill, education, experience)
-- Search candidates by specific criteria
-- Receive Top-10 candidate recommendations based on job requirements
+- Publish job postings with detailed descriptions, required skills, education level, salary range, employment type, and work mode (Remote/On-site/Hybrid)
+- Browse candidate profiles with filter and search support (skill, education, experience)
+- Receive Top-N candidate recommendations matched to a specific job posting
 
 Candidates can:
-- Create and manage profiles
-- Browse and search job postings
-- Apply for positions
+- Create and manage profiles, including work experience, skills, preferred working mode, and preferred location
+- Upload a resume or fill in the profile form
+- Browse and search jobs with keyword, filter, and fuzzy search modes
+- Receive Top-K job recommendations based on profile and preferences
+- Apply to positions
+
+Both candidates and employers have a membership option. Non-members receive the standard Top-10 recommendation cap; members receive unlimited recommendations.
 
 ---
 
@@ -44,8 +48,10 @@ Candidates can:
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | Python 3.11+, Django 5.x, Django REST Framework |
-| Frontend | Node.js 20+, React 18, Vite |
+| Backend | Python 3.12+, Django 6.x, Django REST Framework, SimpleJWT |
+| Recommendation | scikit-learn (TF-IDF, cosine similarity), rapidfuzz (fuzzy search) |
+| API Documentation | drf-spectacular (OpenAPI 3 / Swagger UI) |
+| Frontend | Node.js 20+, React, Vite |
 | Database | PostgreSQL (production), SQLite (local dev) |
 | Testing | PyTest (backend), Jest + React Testing Library (frontend) |
 | CI/CD | GitHub Actions |
@@ -74,15 +80,17 @@ csit314-recruitment-platform/
 │   ├── ISSUE_TEMPLATE/         # Issue templates (bug, feature)
 │   └── pull_request_template.md
 ├── backend/                    # Django REST API
-│   ├── recruitment/            # Main Django project
-│   ├── apps/                   # Django apps (users, jobs, candidates, etc.)
+│   ├── recruitment/            # Main Django project (settings, urls)
+│   ├── core/                   # Application code (models, views, serializers, filters, recommendations)
+│   ├── docs/api/               # OpenAPI schema
+│   ├── tests/                  # PyTest test suite
 │   ├── requirements.txt
 │   └── manage.py
 ├── frontend/                   # React app
 │   ├── src/
 │   ├── public/
 │   └── package.json
-├── database/                   # SQL schemas & migration scripts
+├── database/                   # SQL schemas
 ├── tests/                      # Integration & E2E tests
 ├── .gitignore
 ├── CONTRIBUTING.md
@@ -96,20 +104,20 @@ csit314-recruitment-platform/
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.12+
 - Node.js 20+
 - Git
-- PostgreSQL 15+
-- SQLite
+- PostgreSQL 15+ (production only)
 
 ### Backend Setup
 
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate          # On Windows: venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate          # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py seed_data --flush  # Optional: populate sample data
 python manage.py runserver
 ```
 
@@ -127,13 +135,24 @@ The frontend will run at `http://localhost:5173`.
 
 ---
 
+## API Documentation
+
+Once the backend is running, the interactive API documentation is available at:
+
+- Swagger UI: `http://localhost:8000/api/docs/`
+- Raw OpenAPI schema: `http://localhost:8000/api/schema/`
+
+The schema is also committed to the repository at `backend/docs/api/schema.yml` for offline reference.
+
+---
+
 ## Development Workflow
 
 We follow a Scrum-based workflow.
 
 ### Branching Strategy
 
-- `main` — production-ready code 
+- `main` — production-ready code
 - `develop` — integration branch for the current sprint
 - `feature/<short-name>` — feature branches
 - `bugfix/<short-name>` — bug fixes
@@ -172,7 +191,7 @@ We follow Test-Driven Development (TDD) practices.
 ```bash
 cd backend
 pytest
-pytest --cov=apps                 # With coverage report
+pytest --cov=core                  # With coverage report
 ```
 
 ### Frontend Tests
