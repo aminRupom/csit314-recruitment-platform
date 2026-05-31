@@ -124,10 +124,9 @@ docs: update setup instructions for Windows users
 
 1. Push your branch: `git push origin feature/your-branch`
 2. Open a PR against `develop`, not `main`
-3. Fill out the PR template
-4. Link the issue (e.g., "Closes #15")
-5. Add at least one reviewer
-6. Move the card to "In Review" on the Project board
+3. Link the issue (e.g., "Closes #15")
+4. Add at least one reviewer
+5. Move the card to "In Review" on the Project board
 
 ### Merging
 
