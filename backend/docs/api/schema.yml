@@ -1,8 +1,6 @@
 openapi: 3.0.3
 info:
   title: Intelligent Talent Matching Platform API
-  version: 1.0.0
-  description: REST API for candidate profiles, job postings, and AI-powered recommendations.
 paths:
   /api/auth/login/:
     post:
