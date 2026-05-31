@@ -1,8 +1,8 @@
 # CSIT314 Recruitment Platform
 
-A web-based recruitment platform that connects employers with job candidates. Employers can post jobs, browse candidate profiles, and receive AI-powered candidate recommendations. Candidates can create profiles, browse jobs, and apply to positions.
+Web-based recruitment platform that connects employers with job candidates. Employers post jobs, browse candidate profiles, and get AI-powered candidate recommendations. Candidates create profiles, browse jobs, and apply to positions.
 
-> **Subject:** CSIT314 — Systems Development Methodologies
+> **Subject:** CSIT314, Systems Development Methodologies
 > **Institution:** University of Wollongong
 > **Semester:** Autumn 2026
 > **Group name:** Bring Back Seconds
@@ -26,21 +26,21 @@ A web-based recruitment platform that connects employers with job candidates. Em
 
 ## Project Overview
 
-The platform supports two main user roles.
+Two user roles.
 
 Employers can:
-- Publish job postings with detailed descriptions, required skills, education level, salary range, employment type, and work mode (Remote/On-site/Hybrid)
-- Browse candidate profiles with filter and search support (skill, education, experience)
-- Receive Top-N candidate recommendations matched to a specific job posting
+- Publish job postings with description, required skills, education level, salary range, employment type, and work mode (Remote/On-site/Hybrid)
+- Browse candidate profiles with filter and search (skill, education, experience)
+- Get Top-N candidate recommendations for a specific job
 
 Candidates can:
-- Create and manage profiles, including work experience, skills, preferred working mode, and preferred location
+- Create profiles with work experience, skills, preferred working mode, and preferred location
 - Upload a resume or fill in the profile form
-- Browse and search jobs with keyword, filter, and fuzzy search modes
-- Receive Top-K job recommendations based on profile and preferences
+- Browse and search jobs with keyword, filter, and fuzzy search
+- Get Top-K job recommendations based on profile and preferences
 - Apply to positions
 
-Both candidates and employers have a membership option. Non-members receive the standard Top-10 recommendation cap; members receive unlimited recommendations.
+Both roles support a membership flag. Non-members get the standard Top-10 cap on recommendations. Members get the full ranked list.
 
 ---
 
@@ -80,10 +80,10 @@ csit314-recruitment-platform/
 │   ├── ISSUE_TEMPLATE/         # Issue templates (bug, feature)
 │   └── pull_request_template.md
 ├── backend/                    # Django REST API
-│   ├── recruitment/            # Main Django project (settings, urls)
-│   ├── core/                   # Application code (models, views, serializers, filters, recommendations)
+│   ├── recruitment/            # Django project (settings, urls)
+│   ├── core/                   # Models, views, serializers, filters, recommendations
 │   ├── docs/api/               # OpenAPI schema
-│   ├── tests/                  # PyTest test suite
+│   ├── tests/                  # PyTest suite
 │   ├── requirements.txt
 │   └── manage.py
 ├── frontend/                   # React app
@@ -114,14 +114,14 @@ csit314-recruitment-platform/
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate          # On Windows: .venv\Scripts\activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py seed_data --flush  # Optional: populate sample data
+python manage.py seed_data --flush  # optional: sample data
 python manage.py runserver
 ```
 
-The API will run at `http://localhost:8000`.
+API runs at `http://localhost:8000`.
 
 ### Frontend Setup
 
@@ -131,35 +131,35 @@ npm install
 npm run dev
 ```
 
-The frontend will run at `http://localhost:5173`.
+Frontend runs at `http://localhost:5173`.
 
 ---
 
 ## API Documentation
 
-Once the backend is running, the interactive API documentation is available at:
+With the backend running:
 
 - Swagger UI: `http://localhost:8000/api/docs/`
 - Raw OpenAPI schema: `http://localhost:8000/api/schema/`
 
-The schema is also committed to the repository at `backend/docs/api/schema.yml` for offline reference.
+Schema is also committed at `backend/docs/api/schema.yml`.
 
 ---
 
 ## Development Workflow
 
-We follow a Scrum-based workflow.
+Scrum-based workflow.
 
 ### Branching Strategy
 
-- `main` — production-ready code
-- `develop` — integration branch for the current sprint
-- `feature/<short-name>` — feature branches
-- `bugfix/<short-name>` — bug fixes
+- `main`, production-ready code
+- `develop`, integration branch for the current sprint
+- `feature/<short-name>`, feature branches
+- `bugfix/<short-name>`, bug fixes
 
 ### Commit Message Convention
 
-We use [Conventional Commits](https://www.conventionalcommits.org/):
+[Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
 feat: add job posting form
@@ -171,11 +171,11 @@ refactor: extract auth middleware
 
 ### Pull Request Process
 
-1. Create a feature branch from `develop`
+1. Branch from `develop`
 2. Make changes, commit with clear messages
-3. Push branch and open a PR against `develop`
-4. At least one teammate must review before merging
-5. CI checks must pass (tests, linting)
+3. Push and open a PR against `develop`
+4. At least one teammate reviews before merging
+5. CI must pass (tests, linting)
 6. Squash and merge once approved
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full details.
@@ -184,14 +184,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full details.
 
 ## Testing
 
-We follow Test-Driven Development (TDD) practices.
+TDD where practical.
 
 ### Backend Tests
 
 ```bash
 cd backend
 pytest
-pytest --cov=core                  # With coverage report
+pytest --cov=core                  # with coverage report
 ```
 
 ### Frontend Tests
@@ -206,24 +206,24 @@ npm run test:coverage
 
 ## CI/CD
 
-Continuous integration is configured via GitHub Actions (see `.github/workflows/ci.yml`).
+GitHub Actions, configured in `.github/workflows/ci.yml`.
 
-On every push or pull request, the pipeline will:
+On push and PR:
 
-1. Lint backend code (flake8, black)
-2. Lint frontend code (ESLint)
+1. Lint backend (flake8, black)
+2. Lint frontend (ESLint)
 3. Run backend tests (pytest)
 4. Run frontend tests (Jest)
 5. Build frontend production bundle
 6. Report code coverage
 
-PRs that fail CI cannot be merged into `main` or `develop`.
+PRs failing CI can't merge to `main` or `develop`.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+MIT, see [LICENSE](LICENSE).
 
 ---
 
