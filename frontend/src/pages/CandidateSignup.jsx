@@ -38,6 +38,25 @@ function CandidateSignup() {
   });
 
   const [message, setMessage] = useState("");
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState("");
+  const [experiences, setExperiences] = useState([
+  {
+    id: 1,
+    jobTitle: "",
+    companyName: "",
+    experienceDate: "",
+    responsibility: "",
+  },
+]);
+const [educations, setEducations] = useState([
+  {
+    id: 1,
+    schoolName: "",
+    degree: "",
+    major: "",
+    educationDate: "",
+  },
+]);
   const [showSkillInput, setShowSkillInput] = useState(false);
   const [showAchievementInput, setShowAchievementInput] = useState(false);
 
@@ -50,14 +69,59 @@ function CandidateSignup() {
     });
   }
 
-  function handleFileChange(event) {
-    const { name, files } = event.target;
+  // function handleFileChange(event) {
+  //   const { name, files } = event.target;
 
-    setFormData({
-      ...formData,
-      [name]: files[0],
-    });
+  //   setFormData({
+  //     ...formData,
+  //     [name]: files[0],
+  //   });
+  // }
+
+
+  function processSelectedFile(name, file) {
+  if (!file) {
+    return;
   }
+
+  setFormData((previousData) => ({
+    ...previousData,
+    [name]: file,
+  }));
+
+  if (name === "profilePhoto") {
+    const previewUrl = URL.createObjectURL(file);
+    setProfilePhotoPreview(previewUrl);
+  }
+}
+
+// remove button for profile
+function removeUploadedFile(name) {
+  setFormData((previousData) => ({
+    ...previousData,
+    [name]: null,
+  }));
+
+  if (name === "profilePhoto") {
+    setProfilePhotoPreview("");
+  }
+}
+
+function handleFileChange(event) {
+  const { name, files } = event.target;
+  processSelectedFile(name, files[0]);
+}
+
+function handleDragOver(event) {
+  event.preventDefault();
+}
+
+function handleFileDrop(event, name) {
+  event.preventDefault();
+
+  const droppedFile = event.dataTransfer.files[0];
+  processSelectedFile(name, droppedFile);
+}
 
   function addSkill() {
     if (!formData.newSkill.trim()) {
@@ -102,6 +166,76 @@ function CandidateSignup() {
     });
   }
 
+  function handleExperienceChange(id, field, value) {
+  const updatedExperiences = experiences.map((experience) => {
+    if (experience.id === id) {
+      return {
+        ...experience,
+        [field]: value,
+      };
+    }
+
+    return experience;
+  });
+
+  setExperiences(updatedExperiences);
+}
+
+function addExperience() {
+  const newExperience = {
+    id: Date.now(),
+    jobTitle: "",
+    companyName: "",
+    experienceDate: "",
+    responsibility: "",
+  };
+
+  setExperiences([...experiences, newExperience]);
+}
+
+function removeExperience(id) {
+  if (experiences.length === 1) {
+    return;
+  }
+
+  setExperiences(experiences.filter((experience) => experience.id !== id));
+}
+
+function handleEducationEntryChange(id, field, value) {
+  const updatedEducations = educations.map((education) => {
+    if (education.id === id) {
+      return {
+        ...education,
+        [field]: value,
+      };
+    }
+
+    return education;
+  });
+
+  setEducations(updatedEducations);
+}
+
+function addEducation() {
+  const newEducation = {
+    id: Date.now(),
+    schoolName: "",
+    degree: "",
+    major: "",
+    educationDate: "",
+  };
+
+  setEducations([...educations, newEducation]);
+}
+
+function removeEducation(id) {
+  if (educations.length === 1) {
+    return;
+  }
+
+  setEducations(educations.filter((education) => education.id !== id));
+}
+
   async function handleSubmit(event) {
     event.preventDefault();
 
@@ -125,7 +259,13 @@ function CandidateSignup() {
       return;
     }
 
-    const result = await registerCandidate(formData);
+    const candidatePayload = {
+  ...formData,
+  experiences,
+  educations,
+};
+
+const result = await registerCandidate(candidatePayload);
 
     if (result.success) {
       setMessage("Profile created successfully.");
@@ -280,7 +420,7 @@ function CandidateSignup() {
             ></textarea>
           </div>
 
-          <div className="section-title">
+          {/* <div className="section-title">
             <span></span>
             <p>Experience</p>
             <span></span>
@@ -334,8 +474,101 @@ function CandidateSignup() {
               onChange={handleChange}
               placeholder="Describe your responsibilities and achievements."
             />
-          </div>
+          </div> */}
 
+          <div className="section-title">
+  <span></span>
+  <p>Experience</p>
+  <span></span>
+</div>
+
+<div className="section-action-row">
+  <button type="button" className="mini-button" onClick={addExperience}>
+    Add Experience
+  </button>
+</div>
+
+{experiences.map((experience) => (
+  <div className="experience-entry" key={experience.id}>
+    {experiences.length > 1 && (
+      <button
+        type="button"
+        className="remove-entry-button"
+        onClick={() => removeExperience(experience.id)}
+      >
+        ×
+      </button>
+    )}
+
+    <div className="two-column">
+      <div className="field-group">
+        <label>Job Title</label>
+        <input
+          type="text"
+          value={experience.jobTitle}
+          onChange={(event) =>
+            handleExperienceChange(
+              experience.id,
+              "jobTitle",
+              event.target.value
+            )
+          }
+        />
+      </div>
+
+      <div></div>
+
+      <div className="field-group">
+        <label>Company Name</label>
+        <input
+          type="text"
+          value={experience.companyName}
+          onChange={(event) =>
+            handleExperienceChange(
+              experience.id,
+              "companyName",
+              event.target.value
+            )
+          }
+        />
+      </div>
+
+      <div className="field-group">
+        <label>Start Date - End Date</label>
+        <input
+          type="text"
+          value={experience.experienceDate}
+          onChange={(event) =>
+            handleExperienceChange(
+              experience.id,
+              "experienceDate",
+              event.target.value
+            )
+          }
+        />
+      </div>
+    </div>
+
+    <div className="field-group">
+      <input
+        type="text"
+        value={experience.responsibility}
+        onChange={(event) =>
+          handleExperienceChange(
+            experience.id,
+            "responsibility",
+            event.target.value
+          )
+        }
+        placeholder="Describe your responsibilities and achievements."
+      />
+    </div>
+  </div>
+))}
+
+{/* Education */}
+
+{/* 
           <div className="section-title">
             <span></span>
             <p>Education</p>
@@ -388,7 +621,97 @@ function CandidateSignup() {
                 onChange={handleChange}
               />
             </div>
-          </div>
+          </div> */}
+
+<div className="section-title">
+  <span></span>
+  <p>Education</p>
+  <span></span>
+</div>
+
+<div className="section-action-row">
+  <button type="button" className="mini-button" onClick={addEducation}>
+    Add Education
+  </button>
+</div>
+
+{educations.map((education) => (
+  <div className="education-entry" key={education.id}>
+    {educations.length > 1 && (
+      <button
+        type="button"
+        className="remove-entry-button"
+        onClick={() => removeEducation(education.id)}
+      >
+        ×
+      </button>
+    )}
+
+    <div className="two-column">
+      <div className="field-group">
+        <label>School Name</label>
+        <input
+          type="text"
+          value={education.schoolName}
+          onChange={(event) =>
+            handleEducationEntryChange(
+              education.id,
+              "schoolName",
+              event.target.value
+            )
+          }
+        />
+      </div>
+
+      <div className="field-group">
+        <label>Degree</label>
+        <input
+          type="text"
+          value={education.degree}
+          onChange={(event) =>
+            handleEducationEntryChange(
+              education.id,
+              "degree",
+              event.target.value
+            )
+          }
+        />
+      </div>
+
+      <div className="field-group">
+        <label>Major / Field of Study</label>
+        <input
+          type="text"
+          value={education.major}
+          onChange={(event) =>
+            handleEducationEntryChange(
+              education.id,
+              "major",
+              event.target.value
+            )
+          }
+        />
+      </div>
+
+      <div className="field-group">
+        <label>Start Date - End Date</label>
+        <input
+          type="text"
+          value={education.educationDate}
+          onChange={(event) =>
+            handleEducationEntryChange(
+              education.id,
+              "educationDate",
+              event.target.value
+            )
+          }
+        />
+      </div>
+    </div>
+  </div>
+))}
+
+
 
           {/* <div className="section-title">
             <span></span>
@@ -637,22 +960,53 @@ function CandidateSignup() {
           </div>
 
           <div className="photo-upload-wrapper">
-            <label className="upload-box small-upload">
-              <span className="upload-icon">↑</span>
-              <strong>
-                Choose a file or
-                <br />
-                drag & drop it here
-              </strong>
-              <small>JPG, PNG max 5MB</small>
-              <em>Browse File</em>
-              <input
-                type="file"
-                name="profilePhoto"
-                accept=".jpg,.jpeg,.png"
-                onChange={handleFileChange}
-              />
-            </label>
+            <label
+  className="upload-box small-upload"
+  onDragOver={handleDragOver}
+  onDrop={(event) => handleFileDrop(event, "profilePhoto")}
+>
+  <span className="upload-icon">↑</span>
+  <strong>
+    Choose a file or
+    <br />
+    drag & drop it here
+  </strong>
+  <small>JPG, PNG max 5MB</small>
+  <em>Browse File</em>
+
+  <input
+    type="file"
+    name="profilePhoto"
+    accept=".jpg,.jpeg,.png"
+    onChange={handleFileChange}
+  />
+</label>
+
+{profilePhotoPreview && (
+  <div className="profile-preview-side">
+    <div className="profile-preview-card">
+      <img
+        src={profilePhotoPreview}
+        alt="Profile preview"
+        className="profile-preview-image"
+      />
+    </div>
+  </div>
+)}
+
+{formData.profilePhoto && (
+  <div className="uploaded-file-actions">
+    <p className="selected-file">{formData.profilePhoto.name}</p>
+
+    <button
+      type="button"
+      className="remove-upload-button"
+      onClick={() => removeUploadedFile("profilePhoto")}
+    >
+      Remove
+    </button>
+  </div>
+)}
           </div>
 
           {message && <p className="profile-message">{message}</p>}
@@ -666,7 +1020,11 @@ function CandidateSignup() {
           <div className="resume-upload-area">
             <p>Upload your resume</p>
 
-            <label className="upload-box">
+            <label
+  className="upload-box"
+  onDragOver={handleDragOver}
+  onDrop={(event) => handleFileDrop(event, "resume")}
+>
               <span className="upload-icon">↑</span>
               <strong>
                 Choose a file or
@@ -684,8 +1042,18 @@ function CandidateSignup() {
             </label>
 
             {formData.resume && (
-              <p className="selected-file">{formData.resume.name}</p>
-            )}
+  <div className="uploaded-file-actions">
+    <p className="selected-file">{formData.resume.name}</p>
+
+    <button
+      type="button"
+      className="remove-upload-button"
+      onClick={() => removeUploadedFile("resume")}
+    >
+      Remove
+    </button>
+  </div>
+)}
           </div>
         </aside>
       </form>

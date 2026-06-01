@@ -663,3 +663,76 @@
 .profile-logout-button:hover {
   background-color: #b3bef0;
 }
+
+.profile-panel-header {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 30px;
+}
+
+.profile-edit-button {
+  border: 1px solid #ffffff;
+  border-radius: 4px;
+  background-color: #9ba8df;
+  color: #0b0f2d;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.profile-edit-button:hover {
+  background-color: #b3bef0;
+}
+
+.profile-readonly-value {
+  color: #ffffff;
+  font-size: 15px;
+  padding: 4px 0;
+}
+
+.profile-address-readonly {
+  width: 84%;
+  min-height: 30px;
+  margin-left: 26px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+  color: #ffffff;
+  padding: 4px 0;
+}
+
+.profile-summary-readonly {
+  color: #dce3ff;
+  font-size: 15px;
+  line-height: 1.4;
+  margin-top: 4px;
+  max-width: 95%;
+}
+
+.profile-name-text {
+  font-size: 34px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.profile-location-text {
+  font-size: 30px;
+  margin: 0;
+}
+
+.profile-record-box input[readonly] {
+  background-color: transparent;
+  box-shadow: none;
+  cursor: default;
+}
+
+.profile-record-box input[readonly]:focus {
+  box-shadow: none;
+}
+
+.profile-tag {
+  cursor: default;
+}
+
+.profile-right-panel .profile-panel-header {
+  margin-bottom: -12px;
+}
+
