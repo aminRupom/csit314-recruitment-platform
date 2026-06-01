@@ -259,6 +259,13 @@ def upload_resume(request):
     profile.resume = request.FILES["resume"]
     profile.save()
 
+    # Try to parse and autofill profile from the uploaded resume.
+    try:
+        profile = parse_resume_and_fill_profile(profile)
+    except Exception:
+        # Non-fatal: keep the uploaded file even if parsing fails
+        pass
+
     serializer = CandidateProfileSerializer(profile, context={"request": request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -366,6 +373,7 @@ from .recommendations import (
     recommend_jobs_for_candidate,
     recommend_candidates_for_job,
 )
+from .resume_parser import parse_resume_and_fill_profile
 
 
 @extend_schema(

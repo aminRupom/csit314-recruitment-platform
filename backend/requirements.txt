@@ -28,3 +28,5 @@ scipy==1.17.1
 sqlparse==0.5.5
 threadpoolctl==3.6.0
 uritemplate==4.2.0
+PyMuPDF
+openai
