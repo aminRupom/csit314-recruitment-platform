@@ -37,9 +37,12 @@
   height: 100px;
   border: 2.5px solid white;
   border-radius: 50%;
+  padding: 0;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
 .employer-profile-svg {
@@ -356,6 +359,11 @@
   z-index: 20;
 }
 
+.pro-recommendation-panel {
+  height: 205px;
+  padding: 23px 36px;
+}
+
 .close-modal-button {
   position: absolute;
   top: 6px;
@@ -375,6 +383,10 @@
 .recommendation-range {
   position: relative;
   padding-top: 24px;
+}
+
+.pro-recommendation-panel .recommendation-range {
+  padding-top: 30px;
 }
 
 .range-current-value {
@@ -408,6 +420,10 @@
   display: block;
 }
 
+.pro-recommendation-panel .recommendation-slider {
+  margin-top: 0;
+}
+
 .membership-link {
   margin-top: 26px;
   border: none;
@@ -415,6 +431,96 @@
   color: #0087ff;
   font-size: 15px;
   text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Membership plans popup */
+.membership-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 23px 16px;
+  background: rgba(2, 4, 24, 0.12);
+  z-index: 60;
+}
+
+.membership-plans-modal {
+  position: relative;
+  width: min(852px, calc(100vw - 32px));
+  min-height: 683px;
+  background: #22295f;
+  border: 2px solid white;
+  color: white;
+  padding: 20px 45px 38px;
+}
+
+.membership-close-button {
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  border: none;
+  background: transparent;
+  color: white;
+  font-size: 31px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.membership-plans-modal h2 {
+  margin: 0 0 76px;
+  font-size: 50px;
+  line-height: 1.08;
+  font-weight: 400;
+}
+
+.membership-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 44px;
+}
+
+.membership-plan-card {
+  min-height: 490px;
+  border: 2px solid white;
+  border-radius: 38px;
+  padding: 42px 45px 30px;
+  display: flex;
+  flex-direction: column;
+}
+
+.membership-plan-card h3 {
+  margin: 0 0 4px;
+  color: white;
+  font-size: 50px;
+  line-height: 1.08;
+  font-weight: 400;
+  text-align: center;
+}
+
+.membership-plan-card ul {
+  margin: 0;
+  padding-left: 35px;
+  color: rgba(237, 239, 250, 0.9);
+  font-size: 30px;
+  line-height: 1.13;
+}
+
+.membership-plan-card li {
+  margin-bottom: 5px;
+}
+
+.free-trial-button {
+  width: 284px;
+  height: 74px;
+  margin: auto auto 2px;
+  border: 2px solid white;
+  border-radius: 18px;
+  background: transparent;
+  color: white;
+  font-size: 31px;
+  line-height: 1;
   cursor: pointer;
 }
 
@@ -550,6 +656,39 @@
     left: 50%;
     transform: translateX(-50%);
   }
+
+  .membership-plans-modal {
+    min-height: auto;
+    max-height: calc(100vh - 46px);
+    overflow-y: auto;
+  }
+
+  .membership-plans-modal h2 {
+    margin-bottom: 44px;
+    font-size: 42px;
+  }
+
+  .membership-plan-grid {
+    gap: 28px;
+  }
+
+  .membership-plan-card {
+    min-height: 430px;
+    padding: 34px 30px 28px;
+  }
+
+  .membership-plan-card h3 {
+    font-size: 42px;
+  }
+
+  .membership-plan-card ul {
+    font-size: 25px;
+  }
+
+  .free-trial-button {
+    width: 240px;
+    font-size: 27px;
+  }
 }
 
 @media (max-width: 720px) {
@@ -585,6 +724,50 @@
     left: 50%;
     width: calc(100vw - 30px);
     transform: translateX(-50%);
+  }
+
+  .membership-modal-backdrop {
+    align-items: flex-start;
+    padding: 16px 12px;
+  }
+
+  .membership-plans-modal {
+    width: calc(100vw - 24px);
+    padding: 18px 22px 28px;
+  }
+
+  .membership-plans-modal h2 {
+    margin-bottom: 24px;
+    padding-right: 32px;
+    font-size: 36px;
+  }
+
+  .membership-plan-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .membership-plan-card {
+    min-height: auto;
+    border-radius: 24px;
+    padding: 26px 28px;
+  }
+
+  .membership-plan-card h3 {
+    font-size: 34px;
+  }
+
+  .membership-plan-card ul {
+    font-size: 22px;
+    line-height: 1.2;
+  }
+
+  .free-trial-button {
+    width: 100%;
+    max-width: 280px;
+    height: 62px;
+    margin-top: 24px;
+    font-size: 25px;
   }
 
   .profile-modal {

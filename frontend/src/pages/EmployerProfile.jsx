@@ -1,34 +1,98 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import "../styles/employerProfile.css";
+
+const PASSWORD_MASK = "************";
+
+function PasswordVisibilityIcon({ isVisible }) {
+  if (isVisible) {
+    return (
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C7 20 2.73 16.89 1 12a18.45 18.45 0 0 1 5.06-6.94" />
+        <path d="M9.9 4.24A10.82 10.82 0 0 1 12 4c5 0 9.27 3.11 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+        <path d="M14.12 14.12a3 3 0 0 1-4.24-4.24" />
+        <path d="M1 1l22 22" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
 
 const initialCompanyProfile = {
   companyName: "Amazon",
-  city: "Sydney, NSW",
   email: "hiring@company.com",
-  phone: "+04xxxxxxxxxx",
+  phone: "+0412345678",
   website: "www.company.com",
-  address: "",
-  password: "************",
+  address: "hello world 123, Sydney, NSW",
+  password: "thisaisapassword",
   jobTitle: "Software Engineer",
   location: "Town Hall, Sydney, NSW",
-  jobType: "On-Site",
-  jobDescription: "",
+  jobType: "Full-time",
+  workMode: "Hybrid",
+  jobDescription: "this is a job description",
   responsibilities: [
     "Design and develop software solution",
     "Collaborate with cross-department teams",
   ],
-  requiredEducation: "Bachelor’s Degree",
-  requiredExperience: "1 Year",
+  educationLevel: "Bachelor",
+  experienceYears: "1-3 years",
   requiredSkills: ["Java", "TypeScript"],
-  salary: "$50,000",
+  salary: "$60,000 - $80,000 per year",
   benefits: ["Health Insurance"],
 };
+
+const requiredCompanyFields = [
+  ["companyName", "Company name"],
+  ["email", "Email"],
+  ["address", "Address"],
+  ["phone", "Phone number"],
+  ["website", "Website"],
+  ["password", "Password"],
+];
+
+const requiredJobFields = [
+  ["jobTitle", "Job title"],
+  ["location", "Location"],
+  ["salary", "Salary"],
+];
+
+const requiredJobListFields = [
+  ["responsibilities", "Responsibility"],
+  ["requiredSkills", "Required skill"],
+  ["benefits", "Benefit"],
+];
 
 export default function EmployerProfile() {
   const [profile, setProfile] = useState(initialCompanyProfile);
   const [isEditingCompany, setIsEditingCompany] = useState(false);
   const [isEditingJob, setIsEditingJob] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [companyValidationMessage, setCompanyValidationMessage] = useState("");
+  const [jobValidationMessage, setJobValidationMessage] = useState("");
+  const passwordToggleLabel = showPassword ? "Hide password" : "Show password";
+  const displayedPassword = showPassword ? profile.password : PASSWORD_MASK;
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -37,6 +101,14 @@ export default function EmployerProfile() {
       ...previousProfile,
       [name]: value,
     }));
+
+    if (requiredCompanyFields.some(([fieldName]) => fieldName === name)) {
+      setCompanyValidationMessage("");
+    }
+
+    if (requiredJobFields.some(([fieldName]) => fieldName === name)) {
+      setJobValidationMessage("");
+    }
   }
 
   function handleArrayChange(fieldName, index, value) {
@@ -49,9 +121,29 @@ export default function EmployerProfile() {
         [fieldName]: updatedList,
       };
     });
+
+    if (requiredJobListFields.some(([listName]) => listName === fieldName)) {
+      setJobValidationMessage("");
+    }
   }
 
   function addArrayItem(fieldName, newValue) {
+    const requiredList = requiredJobListFields.find(
+      ([listName]) => listName === fieldName
+    );
+
+    if (requiredList && profile[fieldName].some((item) => !item.trim())) {
+      setJobValidationMessage(`${requiredList[1]} cannot be empty.`);
+      return;
+    }
+
+    if (requiredList && !newValue.trim()) {
+      setJobValidationMessage(`${requiredList[1]} cannot be empty.`);
+      return;
+    }
+
+    setJobValidationMessage("");
+
     setProfile((previousProfile) => ({
       ...previousProfile,
       [fieldName]: [...previousProfile[fieldName], newValue],
@@ -67,35 +159,74 @@ export default function EmployerProfile() {
     }));
   }
 
-  function saveChanges() {
+  function saveCompanyChanges() {
+    const emptyField = requiredCompanyFields.find(
+      ([fieldName]) => !profile[fieldName].trim()
+    );
+
+    if (emptyField) {
+      setCompanyValidationMessage(`${emptyField[1]} cannot be empty.`);
+      return;
+    }
+
+    setCompanyValidationMessage("");
     setIsEditingCompany(false);
+
+    // Backend connection later:
+    // employerApi.updateCompanyProfile(profile)
+  }
+
+  function saveJobChanges() {
+    const emptyField = requiredJobFields.find(
+      ([fieldName]) => !profile[fieldName].trim()
+    );
+
+    if (emptyField) {
+      setJobValidationMessage(`${emptyField[1]} cannot be empty.`);
+      return;
+    }
+
+    const emptyListField = requiredJobListFields.find(([fieldName]) =>
+      profile[fieldName].some((item) => !item.trim())
+    );
+
+    if (emptyListField) {
+      setJobValidationMessage(`${emptyListField[1]} cannot be empty.`);
+      return;
+    }
+
+    setJobValidationMessage("");
     setIsEditingJob(false);
 
     // Backend connection later:
     // employerApi.updateCompanyProfile(profile)
   }
 
-  const isEditing = isEditingCompany || isEditingJob;
-
   return (
     <main className="employer-profile-page">
       <section className="employer-profile-hero">
+        <Link className="profile-back-button" to="/employer-dashboard">
+          Back
+        </Link>
+
         <h1>Company Profile</h1>
 
         <div className="company-heading">
           <h2>{profile.companyName}</h2>
-          <p>{profile.city}</p>
+          <p>{profile.address}</p>
         </div>
       </section>
 
       <section className="company-info-section">
-        <button
-          type="button"
-          className="profile-edit-button"
-          onClick={() => setIsEditingCompany(true)}
-        >
-          Edit <span>↗</span>
-        </button>
+        {!isEditingCompany && (
+          <button
+            type="button"
+            className="profile-edit-button"
+            onClick={() => setIsEditingCompany(true)}
+          >
+            Edit <span>↗</span>
+          </button>
+        )}
 
         <div className="company-info-grid">
           <div className="info-column">
@@ -104,6 +235,7 @@ export default function EmployerProfile() {
               {isEditingCompany ? (
                 <input
                   name="companyName"
+                  required
                   value={profile.companyName}
                   onChange={handleChange}
                 />
@@ -117,6 +249,7 @@ export default function EmployerProfile() {
               {isEditingCompany ? (
                 <input
                   name="email"
+                  required
                   value={profile.email}
                   onChange={handleChange}
                 />
@@ -125,16 +258,17 @@ export default function EmployerProfile() {
               )}
             </div>
 
-            <div className="profile-field-row">
+            <div className="profile-field-row address-row">
               <label>Address:</label>
               {isEditingCompany ? (
                 <textarea
                   name="address"
+                  required
                   value={profile.address}
                   onChange={handleChange}
                 />
               ) : (
-                <span className="empty-line"></span>
+                <span className="profile-text-value">{profile.address}</span>
               )}
             </div>
           </div>
@@ -145,6 +279,7 @@ export default function EmployerProfile() {
               {isEditingCompany ? (
                 <input
                   name="phone"
+                  required
                   value={profile.phone}
                   onChange={handleChange}
                 />
@@ -158,6 +293,7 @@ export default function EmployerProfile() {
               {isEditingCompany ? (
                 <input
                   name="website"
+                  required
                   value={profile.website}
                   onChange={handleChange}
                 />
@@ -173,6 +309,7 @@ export default function EmployerProfile() {
                 <div className="password-input-wrapper">
                   <input
                     name="password"
+                    required
                     type={showPassword ? "text" : "password"}
                     value={profile.password}
                     onChange={handleChange}
@@ -180,36 +317,57 @@ export default function EmployerProfile() {
 
                   <button
                     type="button"
+                    className="password-toggle-button"
+                    aria-label={passwordToggleLabel}
                     onClick={() => setShowPassword((current) => !current)}
                   >
-                    ◉
+                    <PasswordVisibilityIcon isVisible={showPassword} />
                   </button>
                 </div>
               ) : (
-                <>
-                  <span>{profile.password}</span>
+                <div className="password-display-wrapper">
+                  <span>{displayedPassword}</span>
                   <button
                     type="button"
-                    className="password-view-button"
+                    className="password-toggle-button"
+                    aria-label={passwordToggleLabel}
                     onClick={() => setShowPassword((current) => !current)}
                   >
-                    ◉
+                    <PasswordVisibilityIcon isVisible={showPassword} />
                   </button>
-                </>
+                </div>
               )}
             </div>
           </div>
         </div>
+
+        {companyValidationMessage && (
+          <p className="profile-validation-message">
+            {companyValidationMessage}
+          </p>
+        )}
+
+        {isEditingCompany && (
+          <button
+            type="button"
+            className="save-profile-button company-save-button"
+            onClick={saveCompanyChanges}
+          >
+            Save
+          </button>
+        )}
       </section>
 
       <section className="job-info-section">
-        <button
-          type="button"
-          className="profile-edit-button job-edit-button"
-          onClick={() => setIsEditingJob(true)}
-        >
-          Edit <span>↗</span>
-        </button>
+        {!isEditingJob && (
+          <button
+            type="button"
+            className="profile-edit-button job-edit-button"
+            onClick={() => setIsEditingJob(true)}
+          >
+            Edit <span>↗</span>
+          </button>
+        )}
 
         <div className="job-form-content">
           <div className="job-profile-row">
@@ -217,6 +375,7 @@ export default function EmployerProfile() {
             {isEditingJob ? (
               <input
                 name="jobTitle"
+                required
                 value={profile.jobTitle}
                 onChange={handleChange}
               />
@@ -230,6 +389,7 @@ export default function EmployerProfile() {
             {isEditingJob ? (
               <input
                 name="location"
+                required
                 value={profile.location}
                 onChange={handleChange}
               />
@@ -246,12 +406,30 @@ export default function EmployerProfile() {
                 value={profile.jobType}
                 onChange={handleChange}
               >
-                <option>On-Site</option>
-                <option>Remote</option>
-                <option>Hybrid</option>
+                <option>Full-time</option>
+                <option>Part-time</option>
+                <option>Contract</option>
+                <option>Casual</option>
               </select>
             ) : (
               <span>{profile.jobType}</span>
+            )}
+          </div>
+
+          <div className="job-profile-row">
+            <strong>Work Mode:</strong>
+            {isEditingJob ? (
+              <select
+                name="workMode"
+                value={profile.workMode}
+                onChange={handleChange}
+              >
+                <option>Remote</option>
+                <option>On-site</option>
+                <option>Hybrid</option>
+              </select>
+            ) : (
+              <span>{profile.workMode}</span>
             )}
           </div>
 
@@ -265,7 +443,7 @@ export default function EmployerProfile() {
                 onChange={handleChange}
               />
             ) : (
-              <div className="description-lines"></div>
+              <div className="description-text">{profile.jobDescription}</div>
             )}
           </div>
 
@@ -275,8 +453,12 @@ export default function EmployerProfile() {
             {isEditingJob ? (
               <>
                 {profile.responsibilities.map((responsibility, index) => (
-                  <div className="editable-list-item" key={index}>
+                  <div
+                    className="editable-list-item responsibility-list-item"
+                    key={index}
+                  >
                     <input
+                      required
                       value={responsibility}
                       onChange={(event) =>
                         handleArrayChange(
@@ -319,35 +501,37 @@ export default function EmployerProfile() {
             <strong>Required Education Level:</strong>
             {isEditingJob ? (
               <select
-                name="requiredEducation"
-                value={profile.requiredEducation}
+                name="educationLevel"
+                value={profile.educationLevel}
                 onChange={handleChange}
               >
-                <option>Bachelor’s Degree</option>
-                <option>Diploma</option>
                 <option>High School</option>
-                <option>Master’s Degree</option>
+                <option>Diploma</option>
+                <option>Bachelor</option>
+                <option>Master</option>
+                <option>PhD</option>
               </select>
             ) : (
-              <span>{profile.requiredEducation}</span>
+              <span>{profile.educationLevel}</span>
             )}
           </div>
 
           <div className="job-profile-row">
-            <strong>Required Years of Relevant Experience:</strong>
+            <strong>Years of relevant experience:</strong>
             {isEditingJob ? (
               <select
-                name="requiredExperience"
-                value={profile.requiredExperience}
+                name="experienceYears"
+                value={profile.experienceYears}
                 onChange={handleChange}
               >
-                <option>1 Year</option>
-                <option>2 Years</option>
-                <option>3 Years</option>
-                <option>5+ Years</option>
+                <option>0 years</option>
+                <option>1-3 years</option>
+                <option>3-5 years</option>
+                <option>5-10 years</option>
+                <option>10+ years</option>
               </select>
             ) : (
-              <span>{profile.requiredExperience}</span>
+              <span>{profile.experienceYears}</span>
             )}
           </div>
 
@@ -359,6 +543,7 @@ export default function EmployerProfile() {
                 {profile.requiredSkills.map((skill, index) => (
                   <div className="editable-list-item" key={index}>
                     <input
+                      required
                       value={skill}
                       onChange={(event) =>
                         handleArrayChange(
@@ -401,6 +586,7 @@ export default function EmployerProfile() {
               <input
                 className="salary-input"
                 name="salary"
+                required
                 value={profile.salary}
                 onChange={handleChange}
               />
@@ -417,6 +603,7 @@ export default function EmployerProfile() {
                 {profile.benefits.map((benefit, index) => (
                   <div className="editable-list-item" key={index}>
                     <input
+                      required
                       value={benefit}
                       onChange={(event) =>
                         handleArrayChange("benefits", index, event.target.value)
@@ -450,8 +637,16 @@ export default function EmployerProfile() {
           </div>
         </div>
 
-        {isEditing && (
-          <button type="button" className="save-profile-button" onClick={saveChanges}>
+        {jobValidationMessage && (
+          <p className="profile-validation-message">{jobValidationMessage}</p>
+        )}
+
+        {isEditingJob && (
+          <button
+            type="button"
+            className="save-profile-button"
+            onClick={saveJobChanges}
+          >
             Save
           </button>
         )}
@@ -459,3 +654,4 @@ export default function EmployerProfile() {
     </main>
   );
 }
+

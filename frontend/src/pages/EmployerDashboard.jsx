@@ -243,15 +243,21 @@ function FilterPanel({ onClose }) {
   );
 }
 
-function RecommendationPanel({ onClose }) {
-  const [topK, setTopK] = useState(8);
+function RecommendationPanel({ isProMembership, onClose, onSubscribe }) {
+  const [topK, setTopK] = useState(isProMembership ? 18 : 8);
   const minTopK = 1;
-  const maxTopK = 10;
+  const standardMaxTopK = 10;
+  const proMaxTopK = 20;
+  const maxTopK = isProMembership ? proMaxTopK : standardMaxTopK;
   const topKPosition = ((topK - minTopK) / (maxTopK - minTopK)) * 100;
   const showTopKValue = topK > minTopK && topK < maxTopK;
 
   return (
-    <div className="recommendation-panel">
+    <div
+      className={`recommendation-panel ${
+        isProMembership ? "pro-recommendation-panel" : ""
+      }`}
+    >
       <button className="close-modal-button" onClick={onClose}>
         ×
       </button>
@@ -279,13 +285,71 @@ function RecommendationPanel({ onClose }) {
 
         <div className="range-labels">
           <span>{minTopK}</span>
-          <span>{maxTopK}</span>
+          <span>{isProMembership ? "All" : maxTopK}</span>
         </div>
       </div>
 
-      <button className="membership-link">
-        Subscribe to our membership to unlock more recommendations
-      </button>
+      {!isProMembership && (
+        <button className="membership-link" onClick={onSubscribe}>
+          Subscribe to our membership to unlock more recommendations
+        </button>
+      )}
+    </div>
+  );
+}
+
+function MembershipPlansModal({ onClose, onStartTrial }) {
+  return (
+    <div className="membership-modal-backdrop" role="presentation">
+      <section
+        className="membership-plans-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="membership-plans-title"
+      >
+        <button
+          type="button"
+          className="membership-close-button"
+          onClick={onClose}
+          aria-label="Close membership plans"
+        >
+          ×
+        </button>
+
+        <h2 id="membership-plans-title">Membership Plans</h2>
+
+        <div className="membership-plan-grid">
+          <article className="membership-plan-card">
+            <h3>Standard</h3>
+
+            <ul>
+              <li>Upload resume</li>
+              <li>View jobs</li>
+              <li>Create job postings</li>
+              <li>View candidates</li>
+              <li>Search/Filter results</li>
+              <li>View top-10 AI-driven recommendations</li>
+            </ul>
+          </article>
+
+          <article className="membership-plan-card">
+            <h3>Pro</h3>
+
+            <ul>
+              <li>All Standard features</li>
+              <li>Unlimited AI-driven recommendations</li>
+            </ul>
+
+            <button
+              type="button"
+              className="free-trial-button"
+              onClick={onStartTrial}
+            >
+              Start Free Trial
+            </button>
+          </article>
+        </div>
+      </section>
     </div>
   );
 }
@@ -403,6 +467,8 @@ export default function EmployerDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
+  const [showMembershipPlans, setShowMembershipPlans] = useState(false);
+  const [isProMembership, setIsProMembership] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const navigate = useNavigate();
   const filteredCandidates = useMemo(() => {
@@ -472,7 +538,25 @@ export default function EmployerDashboard() {
       {showFilter && <FilterPanel onClose={() => setShowFilter(false)} />}
 
       {showRecommendations && (
-        <RecommendationPanel onClose={() => setShowRecommendations(false)} />
+        <RecommendationPanel
+          key={
+            isProMembership ? "pro-recommendations" : "standard-recommendations"
+          }
+          isProMembership={isProMembership}
+          onClose={() => setShowRecommendations(false)}
+          onSubscribe={() => setShowMembershipPlans(true)}
+        />
+      )}
+
+      {showMembershipPlans && (
+        <MembershipPlansModal
+          onClose={() => setShowMembershipPlans(false)}
+          onStartTrial={() => {
+            setIsProMembership(true);
+            setShowMembershipPlans(false);
+            setShowRecommendations(true);
+          }}
+        />
       )}
 
       {selectedCandidate && (
