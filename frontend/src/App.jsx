@@ -5,6 +5,8 @@ import EmployerSignup from "./pages/EmployerSignup";
 import CandidateDashboard from "./pages/CandidateDashboard";
 import JobDetails from "./pages/JobDetails";
 import CandidateProfile from "./pages/CandidateProfile";
+import EmployerDashboard from "./pages/EmployerDashboard";
+import EmployerProfile from "./pages/EmployerProfile";
 
 function App() {
   return (
@@ -18,7 +20,8 @@ function App() {
       <Route path="/candidate-dashboard" element={<CandidateDashboard />} />
       <Route path="/candidate-profile" element={<CandidateProfile />} />
       <Route path="/jobs/:jobId" element={<JobDetails />} />
-      <Route path="/employer-dashboard" element={<h1>Employer Dashboard</h1>} />
+      <Route path="/employer-dashboard" element={<EmployerDashboard />} />
+      <Route path="/employer-profile" element={<EmployerProfile />} />
     </Routes>
   );
 }
