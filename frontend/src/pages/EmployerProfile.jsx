@@ -205,9 +205,15 @@ export default function EmployerProfile() {
   return (
     <main className="employer-profile-page">
       <section className="employer-profile-hero">
-        <Link className="profile-back-button" to="/employer-dashboard">
-          Back
-        </Link>
+        <div className="profile-header-actions">
+          <Link className="profile-header-button logout-button" to="/login">
+            Logout
+          </Link>
+
+          <Link className="profile-header-button back-button" to="/employer-dashboard">
+            ← Back
+          </Link>
+        </div>
 
         <h1>Company Profile</h1>
 

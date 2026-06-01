@@ -4,7 +4,8 @@
 
 .employer-profile-page {
   min-height: 100vh;
-  width: 100vw;
+  width: 100%;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at 25% 30%, rgba(42, 49, 105, 0.4), transparent 38%),
     linear-gradient(135deg, #20275a 0%, #080c31 72%);
@@ -26,22 +27,39 @@
   font-weight: 700;
 }
 
-.profile-back-button {
+.profile-header-actions {
   position: absolute;
   top: 22px;
   right: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-header-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 88px;
-  height: 37px;
-  border: 2px solid #dce0ff;
-  border-radius: 6px;
-  background: #aab3ee;
-  color: #0d1028;
-  font-size: 18px;
+  min-width: 77px;
+  height: 31px;
+  padding: 0 15px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 400;
   text-decoration: none;
   cursor: pointer;
+}
+
+.logout-button {
+  border: 1px solid #dce5ff;
+  background: #aab3ee;
+  color: #10142f;
+}
+
+.back-button {
+  border: 1px solid rgba(255, 255, 245, 0.95);
+  background: transparent;
+  color: #ffffff;
 }
 
 .company-heading {
@@ -68,7 +86,7 @@
   position: relative;
   min-height: 207px;
   border-bottom: 2px solid rgba(255, 255, 255, 0.85);
-  padding: 28px 90px 72px;
+  padding: 28px clamp(24px, 4.75vw, 90px) 72px;
 }
 
 .company-info-grid {
@@ -167,7 +185,7 @@
 
 .job-info-section {
   position: relative;
-  padding: 26px 90px 32px;
+  padding: 26px clamp(24px, 4.75vw, 90px) 32px;
   min-height: 710px;
 }
 
@@ -176,7 +194,9 @@
 }
 
 .job-form-content {
-  max-width: 940px;
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
 }
 
 .job-profile-row {
@@ -209,7 +229,7 @@
 }
 
 .description-text {
-  width: 930px;
+  width: min(930px, 100%);
   max-width: 100%;
   color: rgba(240, 242, 255, 0.9);
   font-size: 21px;
@@ -264,7 +284,7 @@
 }
 
 .address-row textarea {
-  width: 300px;
+  width: min(300px, 100%);
   height: 72px;
 }
 
@@ -274,14 +294,14 @@
 }
 
 .profile-field-row input {
-  width: 300px;
+  width: min(300px, 100%);
   max-width: 100%;
 }
 
 .password-input-wrapper {
   display: flex;
   align-items: center;
-  width: 300px;
+  width: min(300px, 100%);
   max-width: 100%;
   background: #444d82;
   border: 2px solid rgba(12, 17, 48, 0.75);
@@ -299,7 +319,7 @@
 }
 
 .job-profile-row input {
-  width: 830px;
+  width: min(830px, 100%);
 }
 
 .job-profile-row select {
@@ -307,14 +327,15 @@
 }
 
 .job-description-block textarea {
-  width: 920px;
+  width: min(920px, 100%);
   height: 57px;
 }
 
 .editable-list-item {
   display: flex;
   align-items: center;
-  width: 410px;
+  width: min(410px, 100%);
+  max-width: 100%;
   height: 33px;
   margin-bottom: 7px;
   background: #444d82;
@@ -323,7 +344,7 @@
 }
 
 .responsibility-list-item {
-  width: 720px;
+  width: min(720px, 100%);
 }
 
 .editable-list-item input {
@@ -353,7 +374,7 @@
 }
 
 .salary-input {
-  width: 320px !important;
+  width: min(320px, 100%) !important;
 }
 
 .save-profile-button {
@@ -382,6 +403,19 @@
 }
 
 @media (max-width: 900px) {
+  .employer-profile-hero {
+    height: 260px;
+    padding: 64px 24px 22px;
+  }
+
+  .profile-header-actions {
+    top: 18px;
+    right: 24px;
+    left: 24px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
   .employer-profile-hero h1 {
     font-size: 48px;
   }
