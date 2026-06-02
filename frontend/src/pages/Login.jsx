@@ -48,17 +48,16 @@ function Login() {
 
       if (result.success) {
         setErrorMessage("");
-
-        if (formData.role === "candidate") {
+        if (result.user.role === "CANDIDATE") {
           navigate("/candidate-dashboard");
         } else {
           navigate("/employer-dashboard");
         }
       } else {
-        setErrorMessage(result.message);
+        setErrorMessage(result.message || "Login failed.");
       }
     } catch (error) {
-      setErrorMessage("Something went wrong. Please try again.");
+      setErrorMessage(error.message || "Something went wrong. Please try again.");
     }
   }
 

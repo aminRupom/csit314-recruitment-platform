@@ -120,16 +120,19 @@ function CandidateSignup() {
       return;
     }
 
-    const result = await registerCandidate(formData);
+    try {
+      const result = await registerCandidate(formData);
 
-    if (result.success) {
-      setMessage("Profile created successfully.");
-
-      setTimeout(() => {
-        navigate("/candidate-dashboard");
-      }, 800);
-    } else {
-      setMessage(result.message);
+      if (result.success) {
+        setMessage("Profile created successfully.");
+        setTimeout(() => {
+          navigate("/candidate-dashboard");
+        }, 800);
+      } else {
+        setMessage(result.message || "Registration failed.");
+      }
+    } catch (error) {
+      setMessage(error.message || "Something went wrong. Please try again.");
     }
   }
 
