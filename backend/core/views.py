@@ -16,6 +16,7 @@ from .models import JobPosting, CandidateProfile
 from .serializers import JobPostingSerializer, CandidateProfileSerializer
 from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_serializer
 from rest_framework import serializers as drf_serializers
+from .resume_parser import parse_resume_and_fill_profile
 
 @extend_schema(
     request=RegisterSerializer,
@@ -313,6 +314,11 @@ def upload_resume(request):
 
     profile.resume = request.FILES["resume"]
     profile.save()
+
+    try:
+        profile = parse_resume_and_fill_profile(profile)
+    except Exception:
+        pass
 
     serializer = CandidateProfileSerializer(profile, context={"request": request})
     return Response(serializer.data, status=status.HTTP_200_OK)
