@@ -1,0 +1,22 @@
+[
+  ["software engineer", "programmer", "coder", "developer", "software developer", "swe"],
+  ["data analyst", "data scientist", "data analyst", "business analyst", "analytics engineer"],
+  ["frontend developer", "front-end developer", "ui developer", "web developer", "front end developer"],
+  ["backend developer", "back-end developer", "server-side developer", "api developer", "back end developer"],
+  ["full stack developer", "full-stack developer", "fullstack developer", "full stack engineer"],
+  ["devops engineer", "sre", "site reliability engineer", "platform engineer", "infrastructure engineer"],
+  ["machine learning engineer", "ml engineer", "ai engineer", "artificial intelligence engineer"],
+  ["data engineer", "etl developer", "pipeline engineer", "data infrastructure engineer"],
+  ["qa engineer", "tester", "quality assurance engineer", "test engineer", "automation engineer", "qa analyst"],
+  ["product manager", "pm", "product owner", "po"],
+  ["ux designer", "ui designer", "ux/ui designer", "product designer", "interaction designer"],
+  ["cloud engineer", "cloud architect", "aws engineer", "azure engineer", "gcp engineer"],
+  ["security engineer", "cybersecurity engineer", "penetration tester", "pentester", "infosec engineer"],
+  ["mobile developer", "ios developer", "android developer", "app developer", "react native developer", "flutter developer"],
+  ["database administrator", "dba", "database engineer", "database developer"],
+  ["project manager", "delivery manager", "program manager", "scrum master"],
+  ["network engineer", "network administrator", "systems administrator", "sysadmin"],
+  ["blockchain developer", "smart contract developer", "web3 developer", "solidity developer"],
+  ["embedded developer", "firmware engineer", "iot developer", "systems programmer"],
+  ["technical lead", "tech lead", "lead engineer", "principal engineer", "staff engineer"]
+]
