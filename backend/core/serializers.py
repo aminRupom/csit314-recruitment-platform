@@ -8,6 +8,23 @@ from .models import User
 from .models import CandidateProfile
 from .models import Application
 
+_ALLOWED_RESUME_EXTENSIONS = {".pdf", ".docx"}
+_MAX_RESUME_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
+def validate_resume_file(f):
+    import os
+    ext = os.path.splitext(f.name)[1].lower()
+    if ext not in _ALLOWED_RESUME_EXTENSIONS:
+        raise serializers.ValidationError(
+            {"detail": f"Unsupported file type '{ext}'. Only .pdf and .docx are allowed."}
+        )
+    if f.size > _MAX_RESUME_SIZE:
+        raise serializers.ValidationError(
+            {"detail": "File too large. Maximum allowed size is 5 MB."}
+        )
+    return f
+
 
 class ApplicationSerializer(serializers.ModelSerializer):
     """
@@ -58,6 +75,7 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
             "years_experience",
             "skills",
             "work_experience",
+            "bio",
             "preferred_work_mode",
             "preferred_location",
             "resume",
@@ -68,7 +86,7 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "created_at", "updated_at", "resume_url")
         # `resume` is write-only on POST/PUT but the URL comes back via resume_url
         extra_kwargs = {
-            "resume": {"required": False, "write_only": True},
+            "resume": {"required": False, "write_only": True, "validators": [validate_resume_file]},
         }
 
     def get_resume_url(self, obj) -> str | None:
@@ -113,13 +131,13 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """
-    Used by GET /api/auth/me/ — returns the current user's basic info.
+    Used by GET /api/auth/me/ to return the current user's basic info.
     Never exposes the password hash.
     """
 
     class Meta:
         model = User
-        fields = ("id", "username", "email", "role", "date_joined")
+        fields = ("id", "username", "email", "role", "membership", "date_joined")
         read_only_fields = ("id", "date_joined")
 
 from .models import JobPosting
@@ -131,6 +149,8 @@ class JobPostingSerializer(serializers.ModelSerializer):
     Returns the employer's company name for display purposes.
     """
     employer_username = serializers.CharField(source="employer.username", read_only=True)
+    has_applied = serializers.SerializerMethodField()
+    application_count = serializers.SerializerMethodField()
 
     class Meta:
         model = JobPosting
@@ -149,7 +169,24 @@ class JobPostingSerializer(serializers.ModelSerializer):
             "salary_max",
             "employment_type",
             "employer_username",
+            "has_applied",
+            "application_count",
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("id", "employer_username", "created_at", "updated_at")
+        read_only_fields = ("id", "employer_username", "has_applied", "application_count", "created_at", "updated_at")
+
+    def get_has_applied(self, obj) -> bool | None:
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+        if request.user.role != "CANDIDATE":
+            return None
+        try:
+            profile = request.user.candidate_profile
+        except Exception:
+            return False
+        return Application.objects.filter(candidate=profile, job=obj).exists()
+
+    def get_application_count(self, obj) -> int:
+        return obj.applications.count()

@@ -14,6 +14,7 @@ urlpatterns = [
     path("auth/refresh/", TokenRefreshView.as_view(), name="auth-refresh"),
     path("auth/logout/", views.logout, name="auth-logout"),
     path("auth/me/", views.me, name="auth-me"),
+    path("auth/upgrade-membership/", views.upgrade_membership, name="auth-upgrade-membership"),
 
     # Candidate profile
     path("candidate/profile/", views.candidate_profile, name="candidate-profile"),
@@ -39,4 +40,5 @@ urlpatterns = [
     path("jobs/<int:job_id>/apply/", views.apply_to_job, name="apply-to-job"),
     path("candidate/applications/", views.my_applications, name="my-applications"),
     path("employer/applications/", views.applications_to_my_jobs, name="employer-applications"),
+    path("employer/applications/<int:application_id>/", views.update_application_status, name="employer-application-status"),
 ]

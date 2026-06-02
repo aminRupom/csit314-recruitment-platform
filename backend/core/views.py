@@ -105,14 +105,56 @@ def me(request):
     serializer = UserSerializer(request.user)
     return Response(serializer.data)
 
+
+@extend_schema(
+    request=None,
+    responses={200: UserSerializer},
+    summary="Upgrade the current user to a member (demo toggle, no payment)",
+)
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def upgrade_membership(request):
+    """
+    POST /api/auth/upgrade-membership/
+
+    Sets membership=True for the current user and returns the updated profile.
+    """
+    request.user.membership = True
+    request.user.save()
+    serializer = UserSerializer(request.user)
+    return Response(serializer.data)
+
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import CandidateProfile
 from .serializers import CandidateProfileSerializer
 from .permissions import IsCandidate
 from .filters import JobPostingFilter, CandidateProfileFilter
+import json
+import os
 
 FUZZY_THRESHOLD = 60
 FUZZY_PREFETCH = 100
+
+# Load synonym groups once at module level
+_SYNONYMS_PATH = os.path.join(os.path.dirname(__file__), "data", "synonyms.json")
+with open(_SYNONYMS_PATH) as _f:
+    _SYNONYM_GROUPS: list[list[str]] = json.load(_f)
+
+# Build a lookup: term -> frozenset of all terms in its group (including itself)
+_SYNONYM_MAP: dict[str, frozenset[str]] = {}
+for _group in _SYNONYM_GROUPS:
+    _fset = frozenset(_group)
+    for _term in _group:
+        _SYNONYM_MAP[_term] = _fset
+
+
+def _expand_query(query: str) -> set[str]:
+    """Return the query plus any synonym group members it belongs to."""
+    q = query.lower().strip()
+    terms = {q}
+    if q in _SYNONYM_MAP:
+        terms |= _SYNONYM_MAP[q]
+    return terms
 
 
 class FuzzySearchMixin:
@@ -121,8 +163,9 @@ class FuzzySearchMixin:
 
     When active, structural filters are applied at the database level but the
     keyword search filter is bypassed. The top FUZZY_PREFETCH results are
-    fetched into Python and re-ranked using rapidfuzz. Entries below
-    FUZZY_THRESHOLD are dropped before pagination.
+    fetched into Python and re-ranked using rapidfuzz. The query is expanded
+    with synonyms so that e.g. "programmer" matches "Software Engineer" jobs.
+    Entries below FUZZY_THRESHOLD are dropped before pagination.
     """
 
     def _fuzzy_text(self, obj):
@@ -135,15 +178,20 @@ class FuzzySearchMixin:
         if fuzzy and query:
             from rapidfuzz import fuzz
 
+            expanded_terms = _expand_query(query)
+
             qs = self.get_queryset()
-            # Apply structural filters only — skip SearchFilter
+            # Apply structural filters only; skip SearchFilter
             for backend in self.filter_backends:
                 if not issubclass(backend, filters.SearchFilter):
                     qs = backend().filter_queryset(request, qs, self)
 
             pool = list(qs[:FUZZY_PREFETCH])
             scored = sorted(
-                ((obj, fuzz.partial_ratio(query, self._fuzzy_text(obj))) for obj in pool),
+                (
+                    (obj, max(fuzz.partial_ratio(term, self._fuzzy_text(obj)) for term in expanded_terms))
+                    for obj in pool
+                ),
                 key=lambda x: x[1],
                 reverse=True,
             )
@@ -256,6 +304,13 @@ def upload_resume(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    from .serializers import validate_resume_file
+    from rest_framework.exceptions import ValidationError as DRFValidationError
+    try:
+        validate_resume_file(request.FILES["resume"])
+    except DRFValidationError as exc:
+        return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+
     profile.resume = request.FILES["resume"]
     profile.save()
 
@@ -263,7 +318,7 @@ def upload_resume(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 # ---------------------------------------------------------------------------
-# Job postings — employer side (CRUD on own jobs)
+# Job postings: employer side (CRUD on own jobs)
 # ---------------------------------------------------------------------------
 
 class EmployerJobListCreate(ListCreateAPIView):
@@ -298,7 +353,7 @@ class EmployerJobDetail(RetrieveUpdateDestroyAPIView):
 
 
 # ---------------------------------------------------------------------------
-# Job postings — public/candidate side (browse + search)
+# Job postings: public/candidate side (browse + search)
 # ---------------------------------------------------------------------------
 
 class PublicJobList(FuzzySearchMixin, ListAPIView):
@@ -345,12 +400,12 @@ class EmployerCandidateList(FuzzySearchMixin, ListAPIView):
     permission_classes = [IsEmployer]
     queryset = CandidateProfile.objects.all().order_by("-updated_at")
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ["full_name", "major", "skills"]
+    search_fields = ["full_name", "major", "skills", "work_experience", "education"]
     filterset_class = CandidateProfileFilter
 
     def _fuzzy_text(self, candidate):
         return " ".join(filter(None, [
-            candidate.full_name, candidate.major, candidate.skills
+            candidate.full_name, candidate.major, candidate.skills, candidate.work_experience
         ]))
 
 
@@ -508,4 +563,40 @@ def applications_to_my_jobs(request):
         job__employer=request.user
     ).order_by("-applied_at")
     serializer = ApplicationSerializer(applications, many=True)
+    return Response(serializer.data)
+
+
+@extend_schema(
+    request=inline_serializer(
+        name="ApplicationStatusUpdate",
+        fields={"status": drf_serializers.ChoiceField(choices=Application.Status.choices)},
+    ),
+    responses={200: ApplicationSerializer},
+    summary="Update the status of an application (employer only)",
+)
+@api_view(["PATCH"])
+@permission_classes([IsEmployer])
+def update_application_status(request, application_id):
+    """
+    PATCH /api/employer/applications/<id>/
+
+    Body: { "status": "REVIEWED" | "ACCEPTED" | "REJECTED" }
+    Only the employer who owns the job may update the status (404 otherwise).
+    """
+    try:
+        application = Application.objects.get(id=application_id, job__employer=request.user)
+    except Application.DoesNotExist:
+        return Response({"detail": "Application not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    new_status = request.data.get("status")
+    valid_statuses = [choice[0] for choice in Application.Status.choices]
+    if new_status not in valid_statuses:
+        return Response(
+            {"detail": f"Invalid status '{new_status}'. Valid choices: {valid_statuses}"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    application.status = new_status
+    application.save()
+    serializer = ApplicationSerializer(application)
     return Response(serializer.data)
