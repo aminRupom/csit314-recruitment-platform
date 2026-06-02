@@ -718,6 +718,32 @@
   margin: 0;
 }
 
+.profile-membership-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  margin-top: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 6px;
+  background-color: #9ba8df;
+  color: #0b0f2d;
+  padding: 4px 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.profile-pro-value {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 6px;
+  background-color: rgba(155, 168, 223, 0.22);
+  color: #ffffff;
+  padding: 4px 10px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
 .profile-record-box input[readonly] {
   background-color: transparent;
   box-shadow: none;

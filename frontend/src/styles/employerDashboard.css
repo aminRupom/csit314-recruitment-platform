@@ -524,6 +524,63 @@
   cursor: pointer;
 }
 
+.trial-confirmation-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: rgba(2, 4, 24, 0.22);
+  z-index: 70;
+}
+
+.trial-confirmation-modal {
+  width: min(430px, calc(100vw - 32px));
+  border: 2px solid white;
+  background: #22295f;
+  color: white;
+  padding: 28px 32px 30px;
+  text-align: center;
+}
+
+.trial-confirmation-modal h2 {
+  margin: 0 0 12px;
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 500;
+}
+
+.trial-confirmation-modal p {
+  margin: 0;
+  color: rgba(237, 239, 250, 0.9);
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.trial-confirmation-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.trial-confirmation-actions button {
+  min-width: 116px;
+  min-height: 40px;
+  border: 1px solid white;
+  border-radius: 8px;
+  background: transparent;
+  color: white;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.trial-confirmation-actions button:first-child {
+  background: #9ba8df;
+  color: #0b0f2d;
+}
+
 /* Profile modal */
 .modal-backdrop {
   position: fixed;
@@ -768,6 +825,14 @@
     height: 62px;
     margin-top: 24px;
     font-size: 25px;
+  }
+
+  .trial-confirmation-actions {
+    flex-direction: column;
+  }
+
+  .trial-confirmation-actions button {
+    width: 100%;
   }
 
   .profile-modal {

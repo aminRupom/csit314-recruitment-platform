@@ -1,52 +1,96 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jobs } from "../data/jobs";
 import "../styles/candidateDashboard.css";
 // import { candidateProfile } from "../data/candidateProfile";
-import { getLoggedInCandidateProfile } from "../services/api";
+import {
+  getLoggedInCandidateProfile,
+  startCandidateFreeTrial,
+} from "../services/api";
 import { calculateJobMatchScore } from "../utils/recommendJobs";
 
 
+function MembershipPlansModal({ onClose, onStartTrial }) {
+  return (
+    <div
+      className="candidate-membership-backdrop"
+      role="presentation"
+      onClick={onClose}
+    >
+      <section
+        className="candidate-membership-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="candidate-membership-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h2 id="candidate-membership-title">Membership Plans</h2>
 
-function calculateMatchScore(job) {
-  let score = 0;
+        <div className="candidate-membership-grid">
+          <article className="candidate-membership-card">
+            <h3>Standard</h3>
 
-  const candidateSkills = candidateProfile.skills.map((skill) =>
-    skill.toLowerCase()
+            <ul>
+              <li>Upload resume</li>
+              <li>View jobs</li>
+              <li>Create job postings</li>
+              <li>View candidates</li>
+              <li>Search/Filter results</li>
+              <li>View top-10 AI-driven recommendations</li>
+            </ul>
+          </article>
+
+          <article className="candidate-membership-card">
+            <h3>Pro</h3>
+
+            <ul>
+              <li>All Standard features</li>
+              <li>Unlimited AI-driven recommendations</li>
+            </ul>
+
+            <button
+              type="button"
+              className="candidate-free-trial-button"
+              onClick={onStartTrial}
+            >
+              Start Free Trial
+            </button>
+          </article>
+        </div>
+      </section>
+    </div>
   );
-
-  const jobSkills = job.skills.map((skill) => skill.toLowerCase());
-
-  jobSkills.forEach((skill) => {
-    if (candidateSkills.includes(skill)) {
-      score += 25;
-    }
-  });
-
-  if (
-    job.workMode.toLowerCase() ===
-    candidateProfile.preferredWorkMode.toLowerCase()
-  ) {
-    score += 15;
-  }
-
-  if (
-    job.location.toLowerCase().includes(
-      candidateProfile.preferredLocation.toLowerCase()
-    )
-  ) {
-    score += 15;
-  }
-
-  const candidateLanguages = candidateProfile.spokenLanguages.map((language) =>
-  language.toLowerCase()
-);
-
-if (candidateLanguages.includes(job.language.toLowerCase())) {
-  score += 10;
 }
 
-  return score;
+function TrialConfirmationModal({ onClose, onViewProfile }) {
+  return (
+    <div
+      className="candidate-trial-backdrop"
+      role="presentation"
+      onClick={onClose}
+    >
+      <section
+        className="candidate-trial-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="candidate-trial-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h2 id="candidate-trial-title">Congratulations</h2>
+        <p>Your Pro free trial is now active.</p>
+
+        <div className="candidate-trial-actions">
+          <button type="button" onClick={onViewProfile}>
+            View Profile
+          </button>
+
+          <button type="button" onClick={onClose}>
+            Done
+          </button>
+        </div>
+      </section>
+    </div>
+  );
 }
 
 
@@ -155,14 +199,142 @@ function CandidateDashboard() {
     const [showRecommendedPanel, setShowRecommendedPanel] = useState(false);
     const [useRecommendations, setUseRecommendations] = useState(false);
     const [topK, setTopK] = useState(10);
+    const [appliedTopK, setAppliedTopK] = useState(10);
     const [showFilter, setShowFilter] = useState(false);
+    const [showMembershipPlans, setShowMembershipPlans] = useState(false);
+    const [showTrialConfirmation, setShowTrialConfirmation] = useState(false);
 
     const [selectedJobType, setSelectedJobType] = useState("All");
     const [selectedWorkMode, setSelectedWorkMode] = useState("All");
     const [selectedLanguage, setSelectedLanguage] = useState("All");
     const [salaryRange, setSalaryRange] = useState(70000);
+    const [draftJobType, setDraftJobType] = useState("All");
+    const [draftWorkMode, setDraftWorkMode] = useState("All");
+    const [draftLanguage, setDraftLanguage] = useState("All");
+    const [draftSalaryRange, setDraftSalaryRange] = useState(70000);
+    const [filterPanelPosition, setFilterPanelPosition] = useState({
+      left: 0,
+      top: 0,
+    });
+    const filterPanelRef = useRef(null);
+    const filterButtonRef = useRef(null);
+    const recommendationPanelRef = useRef(null);
+    const recommendationButtonRef = useRef(null);
+    const isProUser = Boolean(candidateProfile?.isProUser);
+    const minTopK = 1;
+    const standardMaxTopK = 10;
+    const minSalaryRange = 30000;
+    const maxSalaryRange = 70000;
+    const salaryRangeStep = 5000;
+    const salaryRangePosition =
+      ((draftSalaryRange - minSalaryRange) /
+        (maxSalaryRange - minSalaryRange)) *
+      100;
+    const salaryRangeTransform =
+      salaryRangePosition <= 5
+        ? "translateX(0)"
+        : salaryRangePosition >= 95
+        ? "translateX(-100%)"
+        : "translateX(-50%)";
 
-  const filteredJobs = useMemo(() => {
+  function getFilterPanelPosition() {
+    const buttonBounds = filterButtonRef.current?.getBoundingClientRect();
+    const panelWidth =
+      filterPanelRef.current?.offsetWidth || Math.min(430, window.innerWidth - 32);
+
+    if (!buttonBounds) {
+      return {
+        left: 16,
+        top: 0,
+      };
+    }
+
+    return {
+      left: Math.min(
+        Math.max(16, buttonBounds.left),
+        Math.max(16, window.innerWidth - panelWidth - 16)
+      ),
+      top: buttonBounds.bottom + 6,
+    };
+  }
+
+  useEffect(() => {
+    if (!showRecommendedPanel) {
+      return undefined;
+    }
+
+    const closeRecommendationPanel = (event) => {
+      const clickedInsidePanel = recommendationPanelRef.current?.contains(
+        event.target
+      );
+      const clickedRecommendationButton =
+        recommendationButtonRef.current?.contains(event.target);
+
+      if (!clickedInsidePanel && !clickedRecommendationButton) {
+        setShowRecommendedPanel(false);
+      }
+    };
+
+    document.addEventListener("mousedown", closeRecommendationPanel);
+
+    return () => {
+      document.removeEventListener("mousedown", closeRecommendationPanel);
+    };
+  }, [showRecommendedPanel]);
+
+  useEffect(() => {
+    if (!showFilter) {
+      return undefined;
+    }
+
+    const updateFilterPanelPosition = () => {
+      setFilterPanelPosition(getFilterPanelPosition());
+    };
+
+    const closeFilterPanel = (event) => {
+      const clickedInsidePanel = filterPanelRef.current?.contains(event.target);
+      const clickedFilterButton = filterButtonRef.current?.contains(
+        event.target
+      );
+
+      if (!clickedInsidePanel && !clickedFilterButton) {
+        setShowFilter(false);
+      }
+    };
+
+    updateFilterPanelPosition();
+    document.addEventListener("mousedown", closeFilterPanel);
+    window.addEventListener("resize", updateFilterPanelPosition);
+    window.addEventListener("scroll", updateFilterPanelPosition, true);
+
+    return () => {
+      document.removeEventListener("mousedown", closeFilterPanel);
+      window.removeEventListener("resize", updateFilterPanelPosition);
+      window.removeEventListener("scroll", updateFilterPanelPosition, true);
+    };
+  }, [showFilter]);
+
+  function handleStartFreeTrial() {
+    const result = startCandidateFreeTrial();
+
+    if (result.success) {
+      setShowMembershipPlans(false);
+      setShowTrialConfirmation(true);
+      return;
+    }
+
+    navigate("/login");
+  }
+
+  function handleApplyFilters() {
+    setSelectedJobType(draftJobType);
+    setSelectedWorkMode(draftWorkMode);
+    setSelectedLanguage(draftLanguage);
+    setSalaryRange(draftSalaryRange);
+    setShowFilter(false);
+  }
+
+  const availableRecommendedJobs = useMemo(() => {
   let result = jobs.map((job) => ({
   ...job,
   matchScore: candidateProfile
@@ -209,11 +381,6 @@ function CandidateDashboard() {
 
 result = result.filter((job) => job.salary <= salaryRange);
 
-    if (useRecommendations) {
-  result.sort((a, b) => b.matchScore - a.matchScore);
-  result = result.slice(0, topK);
-}
-
     return result;
   }, [
   searchTerm,
@@ -221,8 +388,39 @@ result = result.filter((job) => job.salary <= salaryRange);
   selectedWorkMode,
   selectedLanguage,
   salaryRange,
+  candidateProfile,
+]);
+
+  const recommendationMaxTopK = Math.max(minTopK, availableRecommendedJobs.length);
+  const maxTopK = isProUser
+    ? recommendationMaxTopK
+    : Math.min(standardMaxTopK, recommendationMaxTopK);
+  const activeTopK = Math.min(Math.max(topK, minTopK), maxTopK);
+  const activeAppliedTopK = Math.min(
+    Math.max(appliedTopK, minTopK),
+    maxTopK
+  );
+  const topKPosition =
+    maxTopK === minTopK
+      ? 0
+      : ((activeTopK - minTopK) / (maxTopK - minTopK)) * 100;
+  const showTopKValue = activeTopK > minTopK && activeTopK < maxTopK;
+  const topKMaxLabel = isProUser ? "All" : maxTopK;
+  const selectedTopKLabel =
+    isProUser && activeTopK === maxTopK ? "All" : activeTopK;
+
+  const filteredJobs = useMemo(() => {
+    if (!useRecommendations) {
+      return availableRecommendedJobs;
+    }
+
+    return [...availableRecommendedJobs]
+      .sort((a, b) => b.matchScore - a.matchScore)
+      .slice(0, activeAppliedTopK);
+  }, [
+  availableRecommendedJobs,
   useRecommendations,
-  topK,
+  activeAppliedTopK,
 ]);
 
   return (
@@ -254,20 +452,31 @@ result = result.filter((job) => job.salary <= salaryRange);
 
         <button
           type="button"
+          ref={filterButtonRef}
           className="filter-button"
-          onClick={() => setShowFilter(!showFilter)}
+          onClick={() => {
+            if (!showFilter) {
+              setDraftJobType(selectedJobType);
+              setDraftWorkMode(selectedWorkMode);
+              setDraftLanguage(selectedLanguage);
+              setDraftSalaryRange(salaryRange);
+              setFilterPanelPosition(getFilterPanelPosition());
+            }
+
+            setShowFilter(!showFilter);
+          }}
         >
           <span>▽</span>
         </button>
 
         <button
   type="button"
+  ref={recommendationButtonRef}
   className={`recommended-button ${
     useRecommendations ? "recommended-active" : ""
   }`}
   onClick={() => {
     setShowRecommendedPanel(!showRecommendedPanel);
-    setUseRecommendations(true);
   }}
 >
   Find recommended jobs ✦
@@ -275,44 +484,83 @@ result = result.filter((job) => job.salary <= salaryRange);
       </section>
 
       {showRecommendedPanel && (
-  <section className="recommended-panel">
+  <section className="recommended-panel" ref={recommendationPanelRef}>
     <p className="recommended-title">Top-K recommendations</p>
 
     <div className="topk-slider-area">
-      <div className="topk-values">
-        <span>1</span>
-        <span>{topK}</span>
-        <span>10</span>
+      {showTopKValue && (
+        <span
+          className="topk-current-value"
+          style={{ left: `${topKPosition}%` }}
+        >
+          {selectedTopKLabel}
+        </span>
+      )}
+
+      <div className="topk-range-labels">
+        <span>{minTopK}</span>
+        <span>{topKMaxLabel}</span>
       </div>
 
       <input
         type="range"
-        min="1"
-        max="10"
-        value={topK}
-        onChange={(event) => {
-          setTopK(Number(event.target.value));
-          setUseRecommendations(true);
-        }}
+        min={minTopK}
+        max={maxTopK}
+        value={activeTopK}
+        onChange={(event) => setTopK(Number(event.target.value))}
       />
     </div>
 
-    <button
-      type="button"
-      className="clear-recommendation-button"
-      onClick={() => {
-        setUseRecommendations(false);
-        setShowRecommendedPanel(false);
-      }}
-    >
-      Show all jobs
-    </button>
+    <div className="recommendation-actions">
+      <button
+        type="button"
+        className="apply-recommendation-button"
+        onClick={() => {
+          setAppliedTopK(activeTopK);
+          setUseRecommendations(true);
+          setShowRecommendedPanel(false);
+        }}
+      >
+        Show selected jobs
+      </button>
 
-    <a href="#" className="membership-link">
-      Subscribe to our membership to unlock more recommendations
-    </a>
+      <button
+        type="button"
+        className="clear-recommendation-button"
+        onClick={() => {
+          setUseRecommendations(false);
+          setShowRecommendedPanel(false);
+        }}
+      >
+        Show all jobs
+      </button>
+    </div>
+
+    {!isProUser && (
+      <button
+        type="button"
+        className="membership-link"
+        onClick={() => setShowMembershipPlans(true)}
+      >
+        Subscribe to our membership to unlock more recommendations
+      </button>
+    )}
   </section>
 )}
+
+      {showMembershipPlans && (
+        <MembershipPlansModal
+          onClose={() => setShowMembershipPlans(false)}
+          onStartTrial={handleStartFreeTrial}
+        />
+      )}
+
+      {showTrialConfirmation && (
+        <TrialConfirmationModal
+          onClose={() => setShowTrialConfirmation(false)}
+          onViewProfile={() => navigate("/candidate-profile")}
+        />
+      )}
 
       {/* {showFilter && (
         <section className="filter-panel">
@@ -351,13 +599,20 @@ result = result.filter((job) => job.salary <= salaryRange);
       )} */}
 
       {showFilter && (
-  <section className="filter-panel">
+  <section
+    className="filter-panel"
+    ref={filterPanelRef}
+    style={{
+      left: `${filterPanelPosition.left}px`,
+      top: `${filterPanelPosition.top}px`,
+    }}
+  >
     <div className="filter-grid">
       <div className="filter-field">
         <label>Job Type</label>
         <select
-          value={selectedJobType}
-          onChange={(event) => setSelectedJobType(event.target.value)}
+          value={draftJobType}
+          onChange={(event) => setDraftJobType(event.target.value)}
         >
           <option value="All">Type...</option>
           <option value="Full-time">Full-time</option>
@@ -370,8 +625,8 @@ result = result.filter((job) => job.salary <= salaryRange);
       <div className="filter-field">
         <label>Work Mode</label>
         <select
-          value={selectedWorkMode}
-          onChange={(event) => setSelectedWorkMode(event.target.value)}
+          value={draftWorkMode}
+          onChange={(event) => setDraftWorkMode(event.target.value)}
         >
           <option value="All">Mode...</option>
           <option value="Remote">Remote</option>
@@ -383,8 +638,8 @@ result = result.filter((job) => job.salary <= salaryRange);
       <div className="filter-field">
         <label>Job Language</label>
         <select
-  value={selectedLanguage}
-  onChange={(event) => setSelectedLanguage(event.target.value)}
+  value={draftLanguage}
+  onChange={(event) => setDraftLanguage(event.target.value)}
 >
   <option value="All">Language</option>
   <option value="English">English</option>
@@ -401,24 +656,34 @@ result = result.filter((job) => job.salary <= salaryRange);
       <label>Salary Range (Year)</label>
 
       <div className="salary-labels">
-        <span>$30,000</span>
-        <span>${salaryRange.toLocaleString()}</span>
+        <span>${minSalaryRange.toLocaleString()}</span>
+        {draftSalaryRange !== minSalaryRange && (
+          <span
+            className="salary-current-value"
+            style={{
+              left: `${salaryRangePosition}%`,
+              transform: salaryRangeTransform,
+            }}
+          >
+            ${draftSalaryRange.toLocaleString()}
+          </span>
+        )}
       </div>
 
       <input
         type="range"
-        min="30000"
-        max="70000"
-        step="5000"
-        value={salaryRange}
-        onChange={(event) => setSalaryRange(Number(event.target.value))}
+        min={minSalaryRange}
+        max={maxSalaryRange}
+        step={salaryRangeStep}
+        value={draftSalaryRange}
+        onChange={(event) => setDraftSalaryRange(Number(event.target.value))}
       />
     </div>
 
     <button
       type="button"
       className="apply-filter-button"
-      onClick={() => setShowFilter(false)}
+      onClick={handleApplyFilters}
     >
       Apply
     </button>
@@ -426,7 +691,7 @@ result = result.filter((job) => job.salary <= salaryRange);
 )}
 
       <section className="jobs-grid">
-        {filteredJobs.map((job, index) => (
+        {filteredJobs.map((job) => (
           <article
           key={job.id}
           className="job-card"

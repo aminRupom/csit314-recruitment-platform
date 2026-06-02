@@ -126,37 +126,37 @@
   background-color: rgba(74, 140, 255, 0.18);
 }
 
-.filter-panel {
-  position: absolute;
-  top: 52px;
-  left: 410px;
-  width: 360px;
+.candidate-dashboard-page .filter-panel {
+  position: fixed;
+  width: min(430px, calc(100vw - 32px));
+  min-height: 0;
+  height: auto;
   background-color: #252b5f;
   border: 2px solid rgba(255, 255, 255, 0.85);
-  padding: 12px;
+  padding: 10px 16px 14px;
   z-index: 20;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-.filter-grid {
+.candidate-dashboard-page .filter-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px 24px;
+  gap: 12px 24px;
 }
 
-.filter-field {
+.candidate-dashboard-page .filter-field {
   display: flex;
   flex-direction: column;
 }
 
-.filter-field label,
-.salary-filter label {
+.candidate-dashboard-page .filter-field label,
+.candidate-dashboard-page .salary-filter label {
   font-size: 16px;
   color: #ffffff;
   margin-bottom: 6px;
 }
 
-.filter-field select {
+.candidate-dashboard-page .filter-field select {
   height: 32px;
   border: 2px solid rgba(220, 227, 255, 0.8);
   border-radius: 7px;
@@ -167,29 +167,43 @@
   outline: none;
 }
 
-.salary-filter {
-  margin-top: 18px;
+.candidate-dashboard-page .salary-filter {
+  margin-top: 14px;
 }
 
-.salary-labels {
-  display: flex;
-  justify-content: space-between;
-  padding: 0 24px;
+.candidate-dashboard-page .salary-labels {
+  position: relative;
+  height: 18px;
+  padding: 0;
   font-size: 13px;
   color: #ffffff;
   margin-bottom: 2px;
 }
 
-.salary-filter input[type="range"] {
+.candidate-dashboard-page .salary-labels span:first-child {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.candidate-dashboard-page .salary-current-value {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+}
+
+.candidate-dashboard-page .salary-filter input[type="range"] {
+  display: block;
   width: 100%;
   accent-color: #ffffff;
 }
 
-.apply-filter-button {
+.candidate-dashboard-page .apply-filter-button {
+  position: static;
   display: block;
   width: 130px;
   height: 30px;
-  margin: 12px 6px 0 auto;
+  margin: 14px 0 0 auto;
   border: none;
   border-radius: 7px;
   background-color: #9ba8df;
@@ -198,7 +212,7 @@
   cursor: pointer;
 }
 
-.apply-filter-button:hover {
+.candidate-dashboard-page .apply-filter-button:hover {
   background-color: #b3bef0;
 }
 
@@ -222,35 +236,50 @@
 }
 
 .topk-slider-area {
+  position: relative;
+  padding-top: 24px;
   margin-bottom: 28px;
 }
 
-.topk-values {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
+.topk-current-value {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
   color: #dce3ff;
   font-size: 13px;
-  margin-bottom: 2px;
-}
-
-.topk-values span:first-child {
-  text-align: left;
-}
-
-.topk-values span:nth-child(2) {
+  line-height: 1;
+  min-width: 18px;
   text-align: center;
+  z-index: 1;
 }
 
-.topk-values span:last-child {
-  text-align: right;
+.topk-range-labels {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  color: #dce3ff;
+  font-size: 13px;
+  line-height: 1;
+  pointer-events: none;
 }
 
 .topk-slider-area input[type="range"] {
+  display: block;
   width: 100%;
   accent-color: #ffffff;
 }
 
+.recommendation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.apply-recommendation-button,
 .clear-recommendation-button {
   border: 1px solid #ffffff;
   border-radius: 6px;
@@ -259,18 +288,158 @@
   font-size: 13px;
   padding: 5px 12px;
   cursor: pointer;
-  margin-bottom: 12px;
 }
 
+.apply-recommendation-button:hover,
 .clear-recommendation-button:hover {
   background-color: #b3bef0;
 }
 
 .membership-link {
   display: block;
+  border: none;
+  background: transparent;
+  padding: 0;
   color: #2bb8ff;
   font-size: 12px;
+  font-family: inherit;
+  text-align: left;
   text-decoration: underline;
+  cursor: pointer;
+}
+
+.candidate-membership-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: rgba(2, 4, 24, 0.12);
+  z-index: 60;
+}
+
+.candidate-membership-modal {
+  width: min(600px, calc(100vw - 32px));
+  min-height: 480px;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  background-color: #22285b;
+  color: #ffffff;
+  padding: 14px 32px 24px;
+}
+
+.candidate-membership-modal h2 {
+  margin: 0;
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 400;
+}
+
+.candidate-membership-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 30px;
+  margin-top: 52px;
+}
+
+.candidate-membership-card {
+  min-height: 346px;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  border-radius: 30px;
+  padding: 30px 36px 22px;
+  display: flex;
+  flex-direction: column;
+}
+
+.candidate-membership-card h3 {
+  margin: 0 0 6px;
+  color: #ffffff;
+  font-size: 34px;
+  line-height: 1.1;
+  font-weight: 400;
+  text-align: center;
+}
+
+.candidate-membership-card ul {
+  margin: 0;
+  padding-left: 20px;
+  color: rgba(237, 239, 250, 0.9);
+  font-size: 21px;
+  line-height: 1.13;
+}
+
+.candidate-membership-card li {
+  margin-bottom: 2px;
+}
+
+.candidate-free-trial-button {
+  width: 100%;
+  min-height: 52px;
+  margin-top: auto;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  border-radius: 14px;
+  background: transparent;
+  color: #ffffff;
+  font-size: 21px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.candidate-trial-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: rgba(2, 4, 24, 0.22);
+  z-index: 70;
+}
+
+.candidate-trial-modal {
+  width: min(430px, calc(100vw - 32px));
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  background-color: #22285b;
+  color: #ffffff;
+  padding: 28px 32px 30px;
+  text-align: center;
+}
+
+.candidate-trial-modal h2 {
+  margin: 0 0 12px;
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 500;
+}
+
+.candidate-trial-modal p {
+  margin: 0;
+  color: rgba(237, 239, 250, 0.9);
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.candidate-trial-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.candidate-trial-actions button {
+  min-width: 116px;
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-radius: 8px;
+  background: transparent;
+  color: #ffffff;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.candidate-trial-actions button:first-child {
+  background-color: #9ba8df;
+  color: #0b0f2d;
 }
 
 .filter-panel button {
@@ -397,6 +566,40 @@
   }
 
   .recommended-button {
+    width: 100%;
+  }
+
+  .candidate-membership-backdrop {
+    padding: 12px;
+  }
+
+  .candidate-membership-modal {
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+    padding: 16px 22px 24px;
+  }
+
+  .candidate-membership-modal h2 {
+    font-size: 31px;
+  }
+
+  .candidate-membership-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-top: 28px;
+  }
+
+  .candidate-membership-card {
+    min-height: auto;
+    border-radius: 24px;
+    padding: 24px 28px;
+  }
+
+  .candidate-trial-actions {
+    flex-direction: column;
+  }
+
+  .candidate-trial-actions button {
     width: 100%;
   }
 }

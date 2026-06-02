@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { getEmployerMembership } from "../services/api";
 import "../styles/employerProfile.css";
 
 const PASSWORD_MASK = "************";
@@ -85,7 +86,10 @@ const requiredJobListFields = [
 ];
 
 export default function EmployerProfile() {
-  const [profile, setProfile] = useState(initialCompanyProfile);
+  const [profile, setProfile] = useState(() => ({
+    ...initialCompanyProfile,
+    ...getEmployerMembership(),
+  }));
   const [isEditingCompany, setIsEditingCompany] = useState(false);
   const [isEditingJob, setIsEditingJob] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -220,6 +224,11 @@ export default function EmployerProfile() {
         <div className="company-heading">
           <h2>{profile.companyName}</h2>
           <p>{profile.address}</p>
+          {profile.isProUser && (
+            <span className="employer-membership-badge">
+              Pro User - Free Trial Active
+            </span>
+          )}
         </div>
       </section>
 
@@ -306,6 +315,21 @@ export default function EmployerProfile() {
               ) : (
                 <span>{profile.website}</span>
               )}
+            </div>
+
+            <div className="profile-field-row">
+              <label>Membership:</label>
+              <span
+                className={
+                  profile.isProUser
+                    ? "employer-pro-value"
+                    : "profile-standard-value"
+                }
+              >
+                {profile.isProUser
+                  ? "Pro user - free trial active"
+                  : "Standard user"}
+              </span>
             </div>
 
             <div className="profile-field-row password-row">

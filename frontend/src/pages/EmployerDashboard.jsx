@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { startEmployerFreeTrial } from "../services/api";
 import "../styles/employerDashboard.css";
 
 //mock data
@@ -300,12 +301,17 @@ function RecommendationPanel({ isProMembership, onClose, onSubscribe }) {
 
 function MembershipPlansModal({ onClose, onStartTrial }) {
   return (
-    <div className="membership-modal-backdrop" role="presentation">
+    <div
+      className="membership-modal-backdrop"
+      role="presentation"
+      onClick={onClose}
+    >
       <section
         className="membership-plans-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="membership-plans-title"
+        onClick={(event) => event.stopPropagation()}
       >
         <button
           type="button"
@@ -348,6 +354,37 @@ function MembershipPlansModal({ onClose, onStartTrial }) {
               Start Free Trial
             </button>
           </article>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function TrialConfirmationModal({ onClose, onViewProfile }) {
+  return (
+    <div
+      className="trial-confirmation-backdrop"
+      role="presentation"
+      onClick={onClose}
+    >
+      <section
+        className="trial-confirmation-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="trial-confirmation-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h2 id="trial-confirmation-title">Congratulations</h2>
+        <p>Your Pro free trial is now active.</p>
+
+        <div className="trial-confirmation-actions">
+          <button type="button" onClick={onViewProfile}>
+            View Profile
+          </button>
+
+          <button type="button" onClick={onClose}>
+            Done
+          </button>
         </div>
       </section>
     </div>
@@ -468,6 +505,7 @@ export default function EmployerDashboard() {
   const [showFilter, setShowFilter] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [showMembershipPlans, setShowMembershipPlans] = useState(false);
+  const [showTrialConfirmation, setShowTrialConfirmation] = useState(false);
   const [isProMembership, setIsProMembership] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const navigate = useNavigate();
@@ -480,6 +518,17 @@ export default function EmployerDashboard() {
       return searchText.includes(searchTerm.toLowerCase());
     });
   }, [searchTerm]);
+
+  function handleStartFreeTrial() {
+    const result = startEmployerFreeTrial();
+
+    if (result.success) {
+      setIsProMembership(true);
+      setShowMembershipPlans(false);
+      setShowRecommendations(true);
+      setShowTrialConfirmation(true);
+    }
+  }
 
   return (
     <main className="employer-dashboard-page">
@@ -551,11 +600,14 @@ export default function EmployerDashboard() {
       {showMembershipPlans && (
         <MembershipPlansModal
           onClose={() => setShowMembershipPlans(false)}
-          onStartTrial={() => {
-            setIsProMembership(true);
-            setShowMembershipPlans(false);
-            setShowRecommendations(true);
-          }}
+          onStartTrial={handleStartFreeTrial}
+        />
+      )}
+
+      {showTrialConfirmation && (
+        <TrialConfirmationModal
+          onClose={() => setShowTrialConfirmation(false)}
+          onViewProfile={() => navigate("/employer-profile")}
         />
       )}
 

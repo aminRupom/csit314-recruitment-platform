@@ -7,6 +7,18 @@ import {
 } from "../services/api";
 import "../styles/candidateProfileView.css";
 
+function getProfileInitials(fullName) {
+  return (
+    fullName
+      ?.split(" ")
+      .map((namePart) => namePart[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?"
+  );
+}
+
 function CandidateProfile() {
   const navigate = useNavigate();
 
@@ -228,11 +240,16 @@ if (!profile) {
         <h1>My Profile</h1>
 
         <div className="profile-identity-row">
-          <div className="profile-avatar">LA</div>
+          <div className="profile-avatar">
+            {getProfileInitials(profile.fullName)}
+          </div>
 
           <div>
   <h2 className="profile-name-text">{profile.fullName}</h2>
   <p className="profile-location-text">{profile.location}</p>
+  {profile.isProUser && (
+    <span className="profile-membership-badge">Pro User - Free Trial Active</span>
+  )}
 </div>
         </div>
       </header>
@@ -397,6 +414,17 @@ if (!profile) {
     ) : (
       <span className="profile-readonly-value">{profile.email}</span>
     )}
+  </div>
+
+  <div className="profile-inline-field">
+    <label>Membership:</label>
+    <span
+      className={
+        profile.isProUser ? "profile-pro-value" : "profile-readonly-value"
+      }
+    >
+      {profile.isProUser ? "Pro user - free trial active" : "Standard user"}
+    </span>
   </div>
 
   <div className="profile-inline-field">
