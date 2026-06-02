@@ -1,6 +1,8 @@
 openapi: 3.0.3
 info:
   title: Intelligent Talent Matching Platform API
+  version: 1.0.0
+  description: REST API for candidate profiles, job postings, and AI-powered recommendations.
 paths:
   /api/auth/login/:
     post:
@@ -136,6 +138,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RegisterResponse'
+          description: ''
+  /api/auth/upgrade-membership/:
+    post:
+      operationId: auth_upgrade_membership_create
+      description: |-
+        POST /api/auth/upgrade-membership/
+
+        Sets membership=True for the current user and returns the updated profile.
+      summary: Upgrade the current user to a member (demo toggle, no payment)
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
           description: ''
   /api/candidate/applications/:
     get:
@@ -363,6 +384,43 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Application'
+          description: ''
+  /api/employer/applications/{application_id}/:
+    patch:
+      operationId: employer_applications_partial_update
+      description: |-
+        PATCH /api/employer/applications/<id>/
+
+        Body: { "status": "REVIEWED" | "ACCEPTED" | "REJECTED" }
+        Only the employer who owns the job may update the status (404 otherwise).
+      summary: Update the status of an application (employer only)
+      parameters:
+      - in: path
+        name: application_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - employer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedApplicationStatusUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedApplicationStatusUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedApplicationStatusUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
           description: ''
   /api/employer/jobs/:
     get:
@@ -818,6 +876,8 @@ components:
         work_experience:
           type: string
           description: Free-text description of previous roles and responsibilities
+        bio:
+          type: string
         preferred_work_mode:
           oneOf:
           - $ref: '#/components/schemas/PreferredWorkModeEnum'
@@ -894,7 +954,7 @@ components:
           maxLength: 200
         company_info:
           type: string
-          description: About the company — used in employer profile display
+          description: About the company (used in employer profile display)
         description:
           type: string
           description: Full job description (JD)
@@ -931,6 +991,13 @@ components:
         employer_username:
           type: string
           readOnly: true
+        has_applied:
+          type: boolean
+          nullable: true
+          readOnly: true
+        application_count:
+          type: integer
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -940,11 +1007,13 @@ components:
           format: date-time
           readOnly: true
       required:
+      - application_count
       - company_info
       - company_name
       - created_at
       - description
       - employer_username
+      - has_applied
       - id
       - location
       - required_skills
@@ -957,6 +1026,11 @@ components:
           type: string
       required:
       - refresh
+    PatchedApplicationStatusUpdate:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusEnum'
     PatchedJobPosting:
       type: object
       description: |-
@@ -974,7 +1048,7 @@ components:
           maxLength: 200
         company_info:
           type: string
-          description: About the company — used in employer profile display
+          description: About the company (used in employer profile display)
         description:
           type: string
           description: Full job description (JD)
@@ -1010,6 +1084,13 @@ components:
           $ref: '#/components/schemas/EmploymentTypeEnum'
         employer_username:
           type: string
+          readOnly: true
+        has_applied:
+          type: boolean
+          nullable: true
+          readOnly: true
+        application_count:
+          type: integer
           readOnly: true
         created_at:
           type: string
@@ -1148,7 +1229,7 @@ components:
     User:
       type: object
       description: |-
-        Used by GET /api/auth/me/ — returns the current user's basic info.
+        Used by GET /api/auth/me/ to return the current user's basic info.
         Never exposes the password hash.
       properties:
         id:
@@ -1167,6 +1248,8 @@ components:
           maxLength: 254
         role:
           $ref: '#/components/schemas/RoleEnum'
+        membership:
+          type: boolean
         date_joined:
           type: string
           format: date-time

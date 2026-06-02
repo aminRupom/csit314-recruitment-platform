@@ -1,4 +1,4 @@
-# Backend — Intelligent Talent Matching Platform
+# Backend: Intelligent Talent Matching Platform
 
 Django + Django REST Framework + SimpleJWT + SQLite + scikit-learn + rapidfuzz.
 
@@ -41,7 +41,8 @@ Member accounts receive uncapped recommendation results. Non-member accounts rec
 | POST | `/api/auth/login/` | Get JWT access + refresh tokens | None |
 | POST | `/api/auth/refresh/` | Get new access token | Refresh token |
 | POST | `/api/auth/logout/` | Blacklist refresh token | JWT |
-| GET | `/api/auth/me/` | Get current user info | JWT |
+| GET | `/api/auth/me/` | Get current user info (includes `membership`) | JWT |
+| POST | `/api/auth/upgrade-membership/` | Toggle membership to true (demo) | JWT |
 
 ### Candidate Profile
 
@@ -52,7 +53,9 @@ Member accounts receive uncapped recommendation results. Non-member accounts rec
 | PUT | `/api/candidate/profile/` | Update profile | Candidate |
 | POST | `/api/candidate/profile/upload-resume/` | Upload resume (multipart) | Candidate |
 
-**Profile fields:** `full_name`, `contact_email`, `contact_phone`, `education`, `major`, `years_experience`, `skills` (comma-separated, stored lowercase), `work_experience` (free text), `preferred_work_mode` (`REMOTE` / `ONSITE` / `HYBRID`), `preferred_location`.
+**Profile fields:** `full_name`, `contact_email`, `contact_phone`, `education`, `major`, `years_experience`, `skills` (comma-separated, stored lowercase), `work_experience` (free text), `bio` (free text), `preferred_work_mode` (`REMOTE` / `ONSITE` / `HYBRID`), `preferred_location`.
+
+**Resume validation:** only `.pdf` and `.docx` accepted, max 5 MB.
 
 ### Job Postings
 
@@ -65,7 +68,7 @@ Member accounts receive uncapped recommendation results. Non-member accounts rec
 | GET | `/api/jobs/` | Browse all jobs | JWT |
 | GET | `/api/jobs/<id>/` | View single job | JWT |
 
-**Job fields:** `title`, `company_name`, `company_info`, `description`, `required_education`, `required_skills`, `required_experience_years`, `work_mode`, `location`, `salary_min`, `salary_max`, `employment_type` (`FULL_TIME` / `PART_TIME` / `CONTRACT` / `INTERNSHIP`).
+**Job fields:** `title`, `company_name`, `company_info`, `description`, `required_education`, `required_skills`, `required_experience_years`, `work_mode`, `location`, `salary_min`, `salary_max`, `employment_type` (`FULL_TIME` / `PART_TIME` / `CONTRACT` / `INTERNSHIP`), `has_applied` (bool/null, candidate context only), `application_count` (int).
 
 **Job search and filter parameters:**
 
@@ -92,8 +95,8 @@ Member accounts receive uncapped recommendation results. Non-member accounts rec
 
 | Parameter | Type | Description |
 |---|---|---|
-| `search` | string | Keyword search across name, major, skills |
-| `fuzzy=true` | flag | Re-rank top 100 results with fuzzy matching (use with `search`) |
+| `search` | string | Keyword search across name, major, skills, work_experience, education |
+| `fuzzy=true` | flag | Re-rank top 100 results with fuzzy + synonym matching (use with `search`) |
 | `education` | choice | Exact education level (e.g. `MASTER`) |
 | `skills` | string | Case-insensitive containment match on the skills field |
 | `min_experience` | integer | Candidates with at least this many years of experience |
@@ -114,6 +117,7 @@ The recommendation engine uses TF-IDF cosine similarity over profile and job tex
 | POST | `/api/jobs/<id>/apply/` | Apply to a job | Candidate |
 | GET | `/api/candidate/applications/` | View own applications | Candidate |
 | GET | `/api/employer/applications/` | View applications to own jobs | Employer |
+| PATCH | `/api/employer/applications/<id>/` | Update application status (`REVIEWED`/`ACCEPTED`/`REJECTED`) | Employer (owner) |
 
 ## Architecture
 
@@ -121,7 +125,7 @@ The recommendation engine uses TF-IDF cosine similarity over profile and job tex
 - **Permissions:** Custom `IsCandidate` and `IsEmployer` classes enforce role-based access at the view level.
 - **Membership:** `User.membership` flag (togglable via the admin). Lifts the Top-N cap on recommendation endpoints.
 - **Recommendation engine:** TF-IDF vectorisation + cosine similarity over candidate and job text fields (skills, education, major, work experience, preferences, job description). Preference boosts applied post-scoring for work mode and location alignment.
-- **Search pipeline:** Structured filters applied at the database level via `django-filter`, followed by DRF keyword search. Optional fuzzy re-ranking with `rapidfuzz` when `?fuzzy=true` is passed.
+- **Search pipeline:** Structured filters applied at the database level via `django-filter`, followed by DRF keyword search. Optional fuzzy re-ranking with `rapidfuzz` when `?fuzzy=true` is passed. Queries are synonym-expanded before scoring (e.g. "programmer" matches "Software Engineer" jobs).
 - **API schema:** Auto-generated OpenAPI 3 schema via `drf-spectacular`. Available at `/api/schema/` (YAML) and `/api/docs/` (Swagger UI).
 - **Database:** SQLite for development; the schema migrates cleanly to PostgreSQL if needed.
 - **File uploads:** Django `FileField`, served from `/media/` in DEBUG mode.

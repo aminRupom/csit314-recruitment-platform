@@ -11,7 +11,7 @@ class WorkMode(models.TextChoices):
     HYBRID = "HYBRID", "Hybrid"
 
 
-# 1. Custom User model — extends Django's AbstractUser to add a role field
+# 1. Custom User model: extends Django's AbstractUser to add a role field
 class User(AbstractUser):
     """
     Custom user supporting two roles: Candidate and Employer.
@@ -33,7 +33,7 @@ class User(AbstractUser):
         return f"{self.username} ({self.role})"
 
 
-# 2. CandidateProfile — fields per progress report §2.3 and §3.6
+# 2. CandidateProfile: fields per progress report §2.3 and §3.6
 class CandidateProfile(models.Model):
     """
     Candidate's profile. Required fields per the progress report:
@@ -92,7 +92,7 @@ class CandidateProfile(models.Model):
     # Optional bio for richer recommendation matching
     bio = models.TextField(blank=True)
 
-    # Resume file upload — stored under MEDIA_ROOT/resumes/
+    # Resume file upload, stored under MEDIA_ROOT/resumes/
     resume = models.FileField(upload_to="resumes/", blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -144,7 +144,7 @@ class JobPosting(models.Model):
     title = models.CharField(max_length=200)
     company_name = models.CharField(max_length=200)
     company_info = models.TextField(
-        help_text="About the company — used in employer profile display",
+        help_text="About the company (used in employer profile display)",
     )
     description = models.TextField(help_text="Full job description (JD)")
     required_education = models.CharField(

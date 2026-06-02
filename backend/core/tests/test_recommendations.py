@@ -115,7 +115,7 @@ def test_recommend_candidates_for_job(candidate_profile, employer):
 
 @pytest.mark.django_db
 def test_preference_boost_ranks_preferred_work_mode_higher(employer):
-    """Candidate prefers Remote — the Remote job should rank above an otherwise
+    """Candidate prefers Remote; the Remote job should rank above an otherwise
     identical On-site job after the preference boost is applied."""
     user = User.objects.create_user(username="pref_cand", password="x", role="CANDIDATE")
     candidate = CandidateProfile.objects.create(
