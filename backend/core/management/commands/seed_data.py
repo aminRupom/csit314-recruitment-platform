@@ -378,7 +378,7 @@ class Command(BaseCommand):
                 employer=employer,
                 defaults={
                     "company_name": company,
-                    "company_info": f"{company} — leading employer in our space.",
+                    "company_info": f"{company} is a leading employer in our space.",
                     "description": desc,
                     "required_skills": skills,
                     "required_experience_years": exp,
@@ -393,7 +393,7 @@ class Command(BaseCommand):
             jobs.append(job)
         self.stdout.write(self.style.SUCCESS(f"  ...{len(jobs)} jobs ready."))
 
-        # Create applications — each candidate applies to 1–3 random jobs
+        # Create applications; each candidate applies to 1-3 random jobs
         self.stdout.write("Creating applications...")
         application_count = 0
         random.seed(42)
