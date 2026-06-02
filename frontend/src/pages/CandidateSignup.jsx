@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { registerCandidate } from "../services/api";
+import { registerCandidate, uploadResume } from "../services/api";
 import "../styles/candidateProfile.css";
 
 function CandidateSignup() {
@@ -124,6 +124,13 @@ function CandidateSignup() {
       const result = await registerCandidate(formData);
 
       if (result.success) {
+        if (formData.resume) {
+          try {
+            await uploadResume(formData.resume);
+          } catch {
+            // resume upload failure is non-fatal
+          }
+        }
         setMessage("Profile created successfully.");
         setTimeout(() => {
           navigate("/candidate-dashboard");
