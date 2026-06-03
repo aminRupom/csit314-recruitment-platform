@@ -59,6 +59,11 @@
   outline: none;
 }
 
+.form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+}
+
 .form-group input:focus {
   border-color: #aeb8f2;
   box-shadow: 0 0 0 3px rgba(174, 184, 242, 0.2);
@@ -113,7 +118,7 @@
 .role-buttons button {
   flex: 1;
   border: none;
-  background-color: transparent;
+  background-color: rgba(155, 168, 223, 0.18);
   color: #ffffff;
   font-size: 20px;
   cursor: pointer;
@@ -126,7 +131,7 @@
 
 .role-buttons button:hover,
 .role-buttons .selected-role {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(155, 168, 223, 0.42);
 }
 
 @media (max-width: 650px) {

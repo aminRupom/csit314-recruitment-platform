@@ -71,15 +71,16 @@ function Login() {
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">Username</label>
 
             <input
               id="email"
-              type="email"
+              type="text"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              autoComplete="email"
+              autoComplete="username"
+              placeholder="e.g. alice_dev or your@email.com"
             />
           </div>
 
