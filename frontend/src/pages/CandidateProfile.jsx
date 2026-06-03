@@ -5,6 +5,7 @@ import {
   updateLoggedInCandidateProfile,
   uploadResume,
   startCandidateFreeTrial,
+  getCurrentUser,
 } from "../services/api";
 import { clearTokens } from "../services/auth";
 import "../styles/dashboard.css";
@@ -27,6 +28,7 @@ function CandidateProfile() {
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -52,25 +54,33 @@ function CandidateProfile() {
     fetchProfile();
   }, []);
 
+  function applyProfileToForm(data) {
+    setForm({
+      full_name: data.full_name || "",
+      contact_email: data.contact_email || "",
+      contact_phone: data.contact_phone || "",
+      education: data.education || "BACHELOR",
+      major: data.major || "",
+      years_experience: data.years_experience || 0,
+      skills: data.skills || "",
+      work_experience: data.work_experience || "",
+      bio: data.bio || "",
+      preferred_work_mode: data.preferred_work_mode || "REMOTE",
+      preferred_location: data.preferred_location || "",
+    });
+  }
+
   async function fetchProfile() {
     setLoading(true);
     setError("");
     try {
-      const data = await getLoggedInCandidateProfile();
+      const [data, userData] = await Promise.all([
+        getLoggedInCandidateProfile(),
+        getCurrentUser(),
+      ]);
       setProfile(data);
-      setForm({
-        full_name: data.full_name || "",
-        contact_email: data.contact_email || "",
-        contact_phone: data.contact_phone || "",
-        education: data.education || "BACHELOR",
-        major: data.major || "",
-        years_experience: data.years_experience || 0,
-        skills: data.skills || "",
-        work_experience: data.work_experience || "",
-        bio: data.bio || "",
-        preferred_work_mode: data.preferred_work_mode || "REMOTE",
-        preferred_location: data.preferred_location || "",
-      });
+      setUser(userData);
+      applyProfileToForm(data);
     } catch (err) {
       setError(err.message || "Could not load profile.");
     } finally {
@@ -105,7 +115,8 @@ function CandidateProfile() {
     try {
       const updated = await uploadResume(resumeFile);
       setProfile(updated);
-      setMessage("Resume uploaded.");
+      applyProfileToForm(updated);
+      setMessage("Resume uploaded. Fields updated from your resume — review and save.");
       setResumeFile(null);
     } catch (err) {
       setError(err.message || "Upload failed.");
@@ -116,7 +127,8 @@ function CandidateProfile() {
     setUpgrading(true);
     setError("");
     try {
-      await startCandidateFreeTrial();
+      const updatedUser = await startCandidateFreeTrial();
+      setUser(updatedUser);
       setMessage("Membership activated.");
     } catch (err) {
       setError(err.message || "Upgrade failed.");
@@ -265,16 +277,25 @@ function CandidateProfile() {
         </div>
 
         <div className="membership-box">
-          <h3>Premium Membership</h3>
-          <p>Unlock unlimited job recommendations and priority visibility.</p>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={handleUpgrade}
-            disabled={upgrading}
-          >
-            {upgrading ? "Activating..." : "Start Free Trial"}
-          </button>
+          {user && user.membership ? (
+            <>
+              <h3>Premium Member</h3>
+              <p>You have unlimited job recommendations and full platform access.</p>
+            </>
+          ) : (
+            <>
+              <h3>Premium Membership</h3>
+              <p>Unlock unlimited job recommendations and priority visibility.</p>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleUpgrade}
+                disabled={upgrading}
+              >
+                {upgrading ? "Activating..." : "Start Free Trial"}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </main>

@@ -72,10 +72,8 @@ def _call_openai_parse(text: str) -> dict:
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is not set in environment")
-    openai.api_key = api_key
     model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 
-    # Prompt instructing model to output strict JSON with only the fields we need
     system = (
         "You are a resume parsing assistant. Extract the candidate information and "
         "return strictly a single JSON object with keys: full_name, contact_email, contact_phone, "
@@ -84,16 +82,16 @@ def _call_openai_parse(text: str) -> dict:
         "return an empty string or empty array for skills. Do not include any extra text."
     )
 
-    user = f"Here is the resume text:\n---\n{text[:6000]}\n---\nReturn only JSON."
+    prompt = f"Here is the resume text:\n---\n{text[:6000]}\n---\nReturn only JSON."
 
-    resp = openai.ChatCompletion.create(
+    client = openai.OpenAI(api_key=api_key)
+    resp = client.chat.completions.create(
         model=model,
-        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+        messages=[{"role": "system", "content": system}, {"role": "user", "content": prompt}],
         temperature=0.0,
         max_tokens=1500,
     )
-    # Get assistant content
-    assistant = resp["choices"][0]["message"]["content"]
+    assistant = resp.choices[0].message.content
     # Attempt to parse JSON from the assistant output
     try:
         parsed = json.loads(assistant)
