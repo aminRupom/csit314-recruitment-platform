@@ -46,8 +46,10 @@ function CandidateDashboard() {
   const [recommendations, setRecommendations] = useState([]);
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -83,15 +85,30 @@ function CandidateDashboard() {
 
   async function handleSearch(e) {
     e.preventDefault();
-    setLoading(true);
+    setSearching(true);
     setError("");
     try {
       const results = await searchJobs(searchQuery);
       setJobs(Array.isArray(results) ? results : []);
+      setActiveSearch(searchQuery);
     } catch (err) {
       setError(err.message || "Search failed.");
     } finally {
-      setLoading(false);
+      setSearching(false);
+    }
+  }
+
+  async function handleClear() {
+    setSearchQuery("");
+    setActiveSearch("");
+    setSearching(true);
+    try {
+      const results = await getJobs();
+      setJobs(Array.isArray(results) ? results : []);
+    } catch (err) {
+      setError(err.message || "Failed to reload jobs.");
+    } finally {
+      setSearching(false);
     }
   }
 
@@ -122,14 +139,19 @@ function CandidateDashboard() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button type="submit">Search</button>
+          <button type="submit" disabled={searching}>Search</button>
+          {activeSearch && (
+            <button type="button" className="btn btn-secondary" onClick={handleClear}>
+              Clear
+            </button>
+          )}
         </form>
 
         {loading ? (
           <p className="loading-text">Loading...</p>
         ) : (
           <>
-            {recommendations.length > 0 && (
+            {recommendations.length > 0 && !activeSearch && (
               <>
                 <h2 className="section-heading">Recommended for You</h2>
                 {recommendations.map((job) => (
@@ -138,16 +160,27 @@ function CandidateDashboard() {
               </>
             )}
 
-            <h2 className="section-heading">All Jobs</h2>
-            {jobs.length === 0 ? (
-              <p className="empty-text">No jobs found.</p>
+            <h2 className="section-heading">
+              {activeSearch
+                ? `${searching ? "Searching..." : `${jobs.length} result${jobs.length !== 1 ? "s" : ""}`} for "${activeSearch}"`
+                : `All Jobs (${searching ? "..." : jobs.length})`}
+            </h2>
+
+            {searching ? (
+              <p className="loading-text">Searching...</p>
+            ) : jobs.length === 0 ? (
+              <p className="empty-text">
+                {activeSearch ? `No jobs found for "${activeSearch}".` : "No jobs available."}
+              </p>
             ) : (
               jobs.map((job) => <JobCard key={job.id} job={job} />)
             )}
 
             <h2 className="section-heading">My Applications</h2>
             {applications.length === 0 ? (
-              <p className="empty-text">No applications yet.</p>
+              <p className="empty-text">
+                No applications yet. Click a job title above to view details and apply.
+              </p>
             ) : (
               applications.map((app) => (
                 <div key={app.id} className="card">
