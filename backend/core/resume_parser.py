@@ -1,6 +1,9 @@
 import os
 import json
 import logging
+import re
+import zipfile
+import xml.etree.ElementTree as ET
 
 try:
     import fitz  # PyMuPDF
@@ -29,6 +32,52 @@ EDUCATION_MAP = {
     "phd": "PHD",
 }
 
+SECTION_HEADERS = {
+    "summary",
+    "profile",
+    "objective",
+    "experience",
+    "work experience",
+    "employment",
+    "education",
+    "skills",
+    "technical skills",
+    "projects",
+    "certifications",
+    "awards",
+    "references",
+}
+
+KNOWN_SKILLS = [
+    "python",
+    "django",
+    "flask",
+    "fastapi",
+    "javascript",
+    "typescript",
+    "react",
+    "node",
+    "node.js",
+    "java",
+    "c#",
+    "c++",
+    "html",
+    "css",
+    "sql",
+    "postgresql",
+    "mysql",
+    "mongodb",
+    "aws",
+    "azure",
+    "docker",
+    "kubernetes",
+    "git",
+    "figma",
+    "machine learning",
+    "artificial intelligence",
+    "data analysis",
+]
+
 
 def _extract_text_from_pdf(path: str) -> str:
     if fitz is None:
@@ -38,6 +87,32 @@ def _extract_text_from_pdf(path: str) -> str:
     for page in doc:
         parts.append(page.get_text())
     return "\n".join(parts)
+
+
+def _extract_text_from_docx(path: str) -> str:
+    parts = []
+    with zipfile.ZipFile(path) as docx:
+        xml = docx.read("word/document.xml")
+
+    root = ET.fromstring(xml)
+    namespace = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+    for paragraph in root.findall(".//w:p", namespace):
+        text = "".join(
+            node.text or "" for node in paragraph.findall(".//w:t", namespace)
+        ).strip()
+        if text:
+            parts.append(text)
+
+    return "\n".join(parts)
+
+
+def _extract_text_from_resume(path: str) -> str:
+    extension = os.path.splitext(path)[1].lower()
+    if extension == ".pdf":
+        return _extract_text_from_pdf(path)
+    if extension == ".docx":
+        return _extract_text_from_docx(path)
+    raise RuntimeError(f"Unsupported resume type '{extension}'")
 
 
 def _map_education(value: str) -> str:
@@ -63,6 +138,133 @@ def _normalize_skills(skills) -> str:
                 return ", ".join(parts)
         return skills.strip().lower()
     return str(skills)
+
+
+def _clean_line(line: str) -> str:
+    return re.sub(r"\s+", " ", line).strip(" -|•\t")
+
+
+def _extract_section(text: str, header_names: set[str]) -> str:
+    lines = [_clean_line(line) for line in text.splitlines()]
+    captured = []
+    in_section = False
+
+    for line in lines:
+        if not line:
+            if in_section and captured:
+                captured.append("")
+            continue
+
+        normalized = line.lower().rstrip(":")
+        is_header = normalized in SECTION_HEADERS or (
+            len(normalized.split()) <= 3 and normalized in SECTION_HEADERS
+        )
+
+        if normalized in header_names:
+            in_section = True
+            continue
+
+        if in_section and is_header:
+            break
+
+        if in_section:
+            captured.append(line)
+
+    return "\n".join(captured).strip()
+
+
+def _extract_name(text: str) -> str:
+    for line in (_clean_line(line) for line in text.splitlines()):
+        if not line:
+            continue
+        lower = line.lower()
+        if "@" in line or re.search(r"\d", line):
+            continue
+        if any(word in lower for word in ["resume", "curriculum vitae", "cv"]):
+            continue
+        if len(line.split()) <= 5:
+            return line
+    return ""
+
+
+def _extract_phone(text: str) -> str:
+    match = re.search(
+        r"(?:(?:\+?\d{1,3})[\s.-]?)?(?:\(?\d{2,4}\)?[\s.-]?)?\d{3,4}[\s.-]?\d{3,4}",
+        text,
+    )
+    return match.group(0).strip() if match else ""
+
+
+def _extract_years_experience(text: str) -> int:
+    patterns = [
+        r"(\d+)\+?\s*(?:years|yrs)\s+(?:of\s+)?(?:relevant\s+)?experience",
+        r"experience\s*(?:of|:)?\s*(\d+)\+?\s*(?:years|yrs)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text, re.I)
+        if match:
+            return int(match.group(1))
+    return 0
+
+
+def _extract_major(text: str) -> str:
+    degree_pattern = (
+        r"(?:bachelor(?:'s)?|master(?:'s)?|phd|doctorate|diploma)"
+        r"(?:\s+(?:of|in|degree in|science in|arts in))?\s+([A-Za-z][A-Za-z &/-]{2,80})"
+    )
+    match = re.search(degree_pattern, text, re.I)
+    if match:
+        major = re.split(r"\n|,|\|| at | from ", match.group(1), flags=re.I)[0]
+        return _clean_line(major)
+    return ""
+
+
+def _extract_skills(text: str) -> str:
+    skills_section = _extract_section(text, {"skills", "technical skills"})
+    found = []
+
+    if skills_section:
+        candidates = re.split(r"[,;|•\n]", skills_section)
+        found.extend(_clean_line(candidate).lower() for candidate in candidates)
+
+    lower_text = text.lower()
+    found.extend(skill for skill in KNOWN_SKILLS if skill in lower_text)
+
+    unique = []
+    for skill in found:
+        if skill and len(skill) <= 40 and skill not in unique:
+            unique.append(skill)
+
+    return ", ".join(unique)
+
+
+def _heuristic_parse_resume(text: str) -> dict:
+    email_match = re.search(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+", text)
+    summary = _extract_section(text, {"summary", "profile", "objective"})
+    experience = _extract_section(text, {"experience", "work experience", "employment"})
+
+    return {
+        "full_name": _extract_name(text),
+        "contact_email": email_match.group(0) if email_match else "",
+        "contact_phone": _extract_phone(text),
+        "education": _map_education(text),
+        "major": _extract_major(text),
+        "years_experience": _extract_years_experience(text),
+        "skills": _extract_skills(text),
+        "work_experience": experience,
+        "preferred_work_mode": "Remote" if re.search(r"\bremote\b", text, re.I) else "",
+        "preferred_location": "",
+        "bio": summary,
+    }
+
+
+def _merge_parsed_data(primary: dict, fallback: dict) -> dict:
+    merged = dict(primary or {})
+    for key, fallback_value in fallback.items():
+        primary_value = merged.get(key)
+        if primary_value in (None, "", []):
+            merged[key] = fallback_value
+    return merged
 
 
 def _call_openai_parse(text: str) -> dict:
@@ -117,16 +319,18 @@ def parse_resume_and_fill_profile(profile):
 
     path = profile.resume.path
     try:
-        text = _extract_text_from_pdf(path)
+        text = _extract_text_from_resume(path)
     except Exception as e:
-        logger.exception("Failed to extract text from PDF: %s", e)
+        logger.exception("Failed to extract text from resume: %s", e)
         return profile
 
+    fallback_parsed = _heuristic_parse_resume(text)
+
     try:
-        parsed = _call_openai_parse(text)
+        parsed = _merge_parsed_data(_call_openai_parse(text), fallback_parsed)
     except Exception as e:
         logger.exception("OpenAI parsing failed: %s", e)
-        return profile
+        parsed = fallback_parsed
 
     # Map parsed fields to model fields
     try:

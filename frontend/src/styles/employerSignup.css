@@ -1,0 +1,218 @@
+.employer-signup-page {
+  min-height: 100vh;
+  background: linear-gradient(115deg, #30345b 0%, #171b42 45%, #070b27 100%);
+  color: #ffffff;
+  padding: 24px clamp(16px, 4vw, 44px) 44px;
+}
+
+.employer-signup-form {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  border: 1px solid rgba(174, 184, 242, 0.3);
+  border-radius: 8px;
+  background: rgba(10, 14, 43, 0.72);
+  padding: 24px clamp(18px, 3vw, 34px);
+}
+
+.employer-signup-section + .employer-signup-section {
+  margin-top: 24px;
+}
+
+.employer-signup-section h1 {
+  color: #ffffff;
+  font-size: 34px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.employer-signup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 42px;
+}
+
+.employer-signup-small-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.employer-signup-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+}
+
+.employer-signup-field label,
+.employer-signup-row-heading label {
+  color: #ffffff;
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.employer-signup-field input,
+.employer-signup-field select,
+.employer-signup-field textarea,
+.employer-signup-add-row input {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid #aeb8f2;
+  border-radius: 5px;
+  background-color: #485083;
+  color: #ffffff;
+  padding: 7px 9px;
+  font-size: 13px;
+  outline: none;
+}
+
+.employer-signup-field select option {
+  background: #30345b;
+}
+
+.employer-signup-field textarea {
+  min-height: 104px;
+  resize: vertical;
+}
+
+.employer-signup-field input::placeholder,
+.employer-signup-field textarea::placeholder,
+.employer-signup-add-row input::placeholder {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.employer-signup-field input:focus,
+.employer-signup-field select:focus,
+.employer-signup-field textarea:focus,
+.employer-signup-add-row input:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(174, 184, 242, 0.25);
+}
+
+.employer-signup-divider {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 14px;
+}
+
+.employer-signup-divider span {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.employer-signup-divider p {
+  color: #ffffff;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.employer-signup-row-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0 8px;
+}
+
+.employer-signup-mini-button,
+.employer-signup-submit-button {
+  border: 1px solid #ffffff;
+  border-radius: 7px;
+  background-color: #9ba8df;
+  color: #0b0f2d;
+  cursor: pointer;
+  font: inherit;
+  transition: 0.2s ease;
+}
+
+.employer-signup-mini-button {
+  min-height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.employer-signup-mini-button:hover,
+.employer-signup-submit-button:hover {
+  background-color: #b3bef0;
+  transform: translateY(-1px);
+}
+
+.employer-signup-tag-area,
+.employer-signup-tag-box {
+  min-height: 52px;
+  border: 1px solid #aeb8f2;
+  border-radius: 5px;
+  background-color: #485083;
+  padding: 8px;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.employer-signup-pill,
+.employer-signup-tag {
+  border: 1px solid #ffffff;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.13);
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 5px 9px;
+}
+
+.employer-signup-add-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin: 10px 0 14px;
+}
+
+.employer-signup-salary {
+  max-width: 520px;
+}
+
+.employer-signup-message {
+  text-align: center;
+  margin-top: 18px;
+  color: #dce3ff;
+  font-size: 13px;
+}
+
+.employer-signup-submit-button {
+  display: block;
+  width: 220px;
+  min-height: 34px;
+  margin: 16px auto 0;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.employer-signup-submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 850px) {
+  .employer-signup-form {
+    padding: 20px 16px;
+  }
+
+  .employer-signup-section h1 {
+    font-size: 28px;
+  }
+
+  .employer-signup-grid,
+  .employer-signup-small-grid,
+  .employer-signup-add-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .employer-signup-row-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

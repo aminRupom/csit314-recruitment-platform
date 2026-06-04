@@ -55,6 +55,62 @@ def test_parse_resume_and_fill_profile_maps_fields(tmp_path, monkeypatch):
 
 
 @pytest.mark.django_db
+def test_parse_resume_falls_back_to_local_extraction(tmp_path, monkeypatch):
+    user = User.objects.create_user(username="fallback", password="x", role="CANDIDATE")
+    profile = CandidateProfile.objects.create(
+        user=user,
+        full_name="",
+        contact_email="",
+        major="",
+        skills="",
+        years_experience=0,
+        education="BACHELOR",
+    )
+
+    dummy = tmp_path / "fallback.pdf"
+    dummy.write_bytes(b"%PDF-1.4 fallback")
+    with open(dummy, "rb") as fh:
+        profile.resume.save("fallback.pdf", File(fh), save=True)
+
+    resume_text = """
+    Jordan Smith
+    jordan.smith@example.com | +61 400 123 456
+
+    Summary
+    Backend developer who enjoys reliable APIs.
+
+    Skills
+    Python, Django, React, SQL
+
+    Experience
+    5 years experience building recruitment platforms.
+
+    Education
+    Bachelor of Computer Science
+    """
+
+    monkeypatch.setattr(resume_parser, "_extract_text_from_pdf", lambda p: resume_text)
+    monkeypatch.setattr(
+        resume_parser,
+        "_call_openai_parse",
+        lambda t: (_ for _ in ()).throw(RuntimeError("no api key")),
+    )
+
+    updated = resume_parser.parse_resume_and_fill_profile(profile)
+
+    assert updated.full_name == "Jordan Smith"
+    assert updated.contact_email == "jordan.smith@example.com"
+    assert updated.contact_phone == "+61 400 123 456"
+    assert updated.education == "BACHELOR"
+    assert "computer science" in updated.major.lower()
+    assert updated.years_experience == 5
+    assert "python" in updated.skills
+    assert "django" in updated.skills
+    assert "5 years experience" in updated.work_experience.lower()
+    assert "reliable APIs" in updated.bio
+
+
+@pytest.mark.django_db
 def test_upload_resume_endpoint_calls_parser(tmp_path, monkeypatch):
     # Create user and profile
     user = User.objects.create_user(username="u2", password="x", role="CANDIDATE")

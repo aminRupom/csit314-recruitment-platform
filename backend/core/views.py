@@ -11,6 +11,7 @@ from .serializers import RegisterSerializer, UserSerializer
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.exceptions import ValidationError
 from .permissions import IsEmployer
 from .models import JobPosting, CandidateProfile
 from .serializers import JobPostingSerializer, CandidateProfileSerializer
@@ -133,7 +134,7 @@ from .filters import JobPostingFilter, CandidateProfileFilter
 import json
 import os
 
-FUZZY_THRESHOLD = 60
+FUZZY_THRESHOLD = 75
 FUZZY_PREFETCH = 100
 
 # Load synonym groups once at module level
@@ -190,7 +191,13 @@ class FuzzySearchMixin:
             pool = list(qs[:FUZZY_PREFETCH])
             scored = sorted(
                 (
-                    (obj, max(fuzz.partial_ratio(term, self._fuzzy_text(obj)) for term in expanded_terms))
+                    (
+                        obj,
+                        max(
+                            fuzz.partial_ratio(term, self._fuzzy_text(obj).lower())
+                            for term in expanded_terms
+                        ),
+                    )
                     for obj in pool
                 ),
                 key=lambda x: x[1],
@@ -341,6 +348,10 @@ class EmployerJobListCreate(ListCreateAPIView):
         return JobPosting.objects.filter(employer=self.request.user).order_by("-created_at")
 
     def perform_create(self, serializer):
+        if JobPosting.objects.filter(employer=self.request.user).exists():
+            raise ValidationError(
+                {"detail": "Each employer account can only have one job posting."}
+            )
         serializer.save(employer=self.request.user)
 
 

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getLoggedInCandidateProfile,
   updateLoggedInCandidateProfile,
@@ -8,7 +8,7 @@ import {
   getCurrentUser,
 } from "../services/api";
 import { clearTokens } from "../services/auth";
-import "../styles/dashboard.css";
+import "../styles/candidateProfile.css";
 
 const EDUCATION_CHOICES = [
   { value: "HIGH_SCHOOL", label: "High School" },
@@ -24,83 +24,157 @@ const WORK_MODE_CHOICES = [
   { value: "HYBRID", label: "Hybrid" },
 ];
 
+const DEFAULT_FORM = {
+  full_name: "",
+  contact_email: "",
+  contact_phone: "",
+  education: "BACHELOR",
+  major: "",
+  years_experience: 0,
+  skills: "",
+  work_experience: "",
+  bio: "",
+  preferred_work_mode: "REMOTE",
+  preferred_location: "",
+};
+
+function getProfileInitials(fullName) {
+  return (
+    fullName
+      ?.split(" ")
+      .map((namePart) => namePart[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?"
+  );
+}
+
+function getChoiceLabel(choices, value) {
+  return choices.find((choice) => choice.value === value)?.label || value || "-";
+}
+
+function splitSkills(skills) {
+  return (skills || "")
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter(Boolean);
+}
+
+function getSectionPayload(form, section) {
+  if (section === "left") {
+    return {
+      full_name: form.full_name,
+      contact_email: form.contact_email,
+      contact_phone: form.contact_phone,
+      years_experience: form.years_experience,
+      preferred_work_mode: form.preferred_work_mode,
+      preferred_location: form.preferred_location,
+    };
+  }
+
+  return {
+    bio: form.bio,
+    work_experience: form.work_experience,
+    education: form.education,
+    major: form.major,
+    skills: form.skills,
+  };
+}
+
 function CandidateProfile() {
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState(null);
   const [user, setUser] = useState(null);
+  const [form, setForm] = useState(DEFAULT_FORM);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [upgrading, setUpgrading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [resumeFile, setResumeFile] = useState(null);
-  const [upgrading, setUpgrading] = useState(false);
+  const [newSkill, setNewSkill] = useState("");
+  const [leftEditMode, setLeftEditMode] = useState(false);
+  const [rightEditMode, setRightEditMode] = useState(false);
 
-  const [form, setForm] = useState({
-    full_name: "",
-    contact_email: "",
-    contact_phone: "",
-    education: "BACHELOR",
-    major: "",
-    years_experience: 0,
-    skills: "",
-    work_experience: "",
-    bio: "",
-    preferred_work_mode: "REMOTE",
-    preferred_location: "",
-  });
-
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  const skills = useMemo(() => splitSkills(form.skills), [form.skills]);
 
   function applyProfileToForm(data) {
     setForm({
-      full_name: data.full_name || "",
-      contact_email: data.contact_email || "",
-      contact_phone: data.contact_phone || "",
-      education: data.education || "BACHELOR",
-      major: data.major || "",
-      years_experience: data.years_experience || 0,
-      skills: data.skills || "",
-      work_experience: data.work_experience || "",
-      bio: data.bio || "",
-      preferred_work_mode: data.preferred_work_mode || "REMOTE",
-      preferred_location: data.preferred_location || "",
+      full_name: data?.full_name || "",
+      contact_email: data?.contact_email || "",
+      contact_phone: data?.contact_phone || "",
+      education: data?.education || "BACHELOR",
+      major: data?.major || "",
+      years_experience: data?.years_experience || 0,
+      skills: data?.skills || "",
+      work_experience: data?.work_experience || "",
+      bio: data?.bio || "",
+      preferred_work_mode: data?.preferred_work_mode || "REMOTE",
+      preferred_location: data?.preferred_location || "",
     });
   }
 
-  async function fetchProfile() {
+  const fetchProfile = useCallback(async () => {
     setLoading(true);
     setError("");
+
     try {
-      const [data, userData] = await Promise.all([
+      const [profileData, userData] = await Promise.all([
         getLoggedInCandidateProfile(),
         getCurrentUser(),
       ]);
-      setProfile(data);
+
+      setProfile(profileData);
       setUser(userData);
-      applyProfileToForm(data);
+      applyProfileToForm(profileData);
     } catch (err) {
       setError(err.message || "Could not load profile.");
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const fetchTimer = window.setTimeout(() => {
+      fetchProfile();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(fetchTimer);
+    };
+  }, [fetchProfile]);
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+    setForm((currentForm) => ({
+      ...currentForm,
+      [name]: name === "years_experience" ? Number(value) : value,
+    }));
   }
 
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  }
-
-  async function handleSave(e) {
-    e.preventDefault();
+  async function saveProfile(section) {
     setSaving(true);
     setError("");
     setMessage("");
+
     try {
-      await updateLoggedInCandidateProfile(form);
-      setMessage("Profile saved.");
+      const updatedProfile = await updateLoggedInCandidateProfile(
+        getSectionPayload(form, section)
+      );
+      setProfile(updatedProfile);
+      applyProfileToForm(updatedProfile);
+      setMessage("Profile saved successfully.");
+
+      if (section === "left") {
+        setLeftEditMode(false);
+      }
+
+      if (section === "right") {
+        setRightEditMode(false);
+      }
     } catch (err) {
       setError(err.message || "Save failed.");
     } finally {
@@ -108,24 +182,54 @@ function CandidateProfile() {
     }
   }
 
+  function addSkill() {
+    if (!newSkill.trim()) {
+      return;
+    }
+
+    const nextSkills = [...skills, newSkill.trim()];
+    setForm((currentForm) => ({
+      ...currentForm,
+      skills: nextSkills.join(", "),
+    }));
+    setNewSkill("");
+  }
+
+  function removeSkill(skillToRemove) {
+    const nextSkills = skills.filter((skill) => skill !== skillToRemove);
+    setForm((currentForm) => ({
+      ...currentForm,
+      skills: nextSkills.join(", "),
+    }));
+  }
+
   async function handleResumeUpload() {
-    if (!resumeFile) return;
+    if (!resumeFile) {
+      return;
+    }
+
+    setUploading(true);
     setError("");
     setMessage("");
+
     try {
-      const updated = await uploadResume(resumeFile);
-      setProfile(updated);
-      applyProfileToForm(updated);
-      setMessage("Resume uploaded. Fields updated from your resume — review and save.");
+      const updatedProfile = await uploadResume(resumeFile);
+      setProfile(updatedProfile);
+      applyProfileToForm(updatedProfile);
       setResumeFile(null);
+      setMessage("Resume uploaded. Review the updated fields and save.");
     } catch (err) {
       setError(err.message || "Upload failed.");
+    } finally {
+      setUploading(false);
     }
   }
 
   async function handleUpgrade() {
     setUpgrading(true);
     setError("");
+    setMessage("");
+
     try {
       const updatedUser = await startCandidateFreeTrial();
       setUser(updatedUser);
@@ -144,50 +248,135 @@ function CandidateProfile() {
 
   if (loading) {
     return (
-      <main className="dashboard-page">
-        <div className="dashboard-container">
-          <p className="loading-text">Loading profile...</p>
-        </div>
+      <main className="candidate-profile-view-page">
+        <p className="profile-loading-text">Loading profile...</p>
       </main>
     );
   }
 
   return (
-    <main className="dashboard-page">
-      <div className="dashboard-container">
-        <nav className="dashboard-nav">
-          <h1>Hustle</h1>
-          <div className="nav-links">
-            <Link to="/candidate-dashboard">Dashboard</Link>
-            <button onClick={handleLogout}>Logout</button>
+    <main className="candidate-profile-view-page">
+      <header className="profile-top-section">
+        <div className="profile-nav-actions">
+          <button
+            type="button"
+            className="profile-back-button"
+            onClick={() => navigate("/candidate-dashboard")}
+          >
+            Back
+          </button>
+
+          <button
+            type="button"
+            className="profile-logout-button"
+            onClick={handleLogout}
+          >
+            Logout
+          </button>
+        </div>
+
+        <h1>My Profile</h1>
+
+        <div className="profile-identity-row">
+          <div className="profile-avatar">{getProfileInitials(form.full_name)}</div>
+
+          <div>
+            <h2 className="profile-name-text">
+              {form.full_name || "Candidate"}
+            </h2>
+            <p className="profile-location-text">
+              {form.preferred_location || "Preferred location not set"}
+            </p>
+            {user?.membership && (
+              <span className="profile-membership-badge">
+                Pro User - Free Trial Active
+              </span>
+            )}
           </div>
-        </nav>
+        </div>
 
-        {error && <p className="error-text">{error}</p>}
-        {message && <p className="success-text">{message}</p>}
+        {error && <p className="profile-error-message">{error}</p>}
+        {message && <p className="profile-save-message">{message}</p>}
+      </header>
 
-        <h2 className="section-heading">My Profile</h2>
-
-        {!profile && !loading ? (
-          <p className="empty-text">No profile found. Submit the form below to create one.</p>
-        ) : null}
-
-        <form onSubmit={handleSave}>
-          <div className="form-row">
-            <div className="form-field">
-              <label>Full Name</label>
-              <input name="full_name" value={form.full_name} onChange={handleChange} />
+      <section className="profile-content-grid">
+        <aside className="profile-left-panel">
+          <section className="profile-section-block">
+            <div className="profile-section-heading">
+              <h2>Personal Info</h2>
+              <button
+                type="button"
+                className="candidate-profile-edit-button"
+                onClick={() => setLeftEditMode(true)}
+                disabled={leftEditMode || saving}
+              >
+                {leftEditMode ? "Editing" : "Edit"}
+              </button>
             </div>
-            <div className="form-field">
-              <label>Contact Email</label>
-              <input type="email" name="contact_email" value={form.contact_email} onChange={handleChange} />
-            </div>
-            <div className="form-field">
-              <label>Phone</label>
-              <input name="contact_phone" value={form.contact_phone} onChange={handleChange} />
-            </div>
-            <div className="form-field">
-              <label>Years of Experience</label>
+          </section>
+
+          <div className="profile-inline-field">
+            <label>Full name:</label>
+            {leftEditMode ? (
+              <input
+                type="text"
+                name="full_name"
+                value={form.full_name}
+                onChange={handleChange}
+              />
+            ) : (
+              <span className="profile-readonly-value">
+                {form.full_name || "-"}
+              </span>
+            )}
+          </div>
+
+          <div className="profile-inline-field">
+            <label>Email Address:</label>
+            {leftEditMode ? (
+              <input
+                type="email"
+                name="contact_email"
+                value={form.contact_email}
+                onChange={handleChange}
+              />
+            ) : (
+              <span className="profile-readonly-value">
+                {form.contact_email || "-"}
+              </span>
+            )}
+          </div>
+
+          <div className="profile-inline-field">
+            <label>Membership:</label>
+            <span
+              className={
+                user?.membership ? "profile-pro-value" : "profile-readonly-value"
+              }
+            >
+              {user?.membership ? "Pro user - free trial active" : "Standard user"}
+            </span>
+          </div>
+
+          <div className="profile-inline-field">
+            <label>Phone Number:</label>
+            {leftEditMode ? (
+              <input
+                type="text"
+                name="contact_phone"
+                value={form.contact_phone}
+                onChange={handleChange}
+              />
+            ) : (
+              <span className="profile-readonly-value">
+                {form.contact_phone || "-"}
+              </span>
+            )}
+          </div>
+
+          <div className="profile-inline-field">
+            <label>Years Experience:</label>
+            {leftEditMode ? (
               <input
                 type="number"
                 name="years_experience"
@@ -195,109 +384,250 @@ function CandidateProfile() {
                 value={form.years_experience}
                 onChange={handleChange}
               />
-            </div>
-            <div className="form-field">
-              <label>Education</label>
-              <select name="education" value={form.education} onChange={handleChange}>
-                {EDUCATION_CHOICES.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
+            ) : (
+              <span className="profile-readonly-value">
+                {form.years_experience}
+              </span>
+            )}
+          </div>
+
+          <div className="profile-inline-field">
+            <label>Preferred Work Mode:</label>
+            {leftEditMode ? (
+              <select
+                name="preferred_work_mode"
+                value={form.preferred_work_mode}
+                onChange={handleChange}
+              >
+                {WORK_MODE_CHOICES.map((choice) => (
+                  <option key={choice.value} value={choice.value}>
+                    {choice.label}
+                  </option>
                 ))}
               </select>
-            </div>
-            <div className="form-field">
-              <label>Major / Field of Study</label>
-              <input name="major" value={form.major} onChange={handleChange} />
-            </div>
+            ) : (
+              <span className="profile-readonly-value">
+                {getChoiceLabel(WORK_MODE_CHOICES, form.preferred_work_mode)}
+              </span>
+            )}
           </div>
 
-          <div className="form-field">
-            <label>Skills (comma-separated)</label>
-            <input name="skills" value={form.skills} onChange={handleChange} placeholder="e.g. Python, Django, React" />
+          <div className="profile-inline-field">
+            <label>Preferred Location:</label>
+            {leftEditMode ? (
+              <input
+                type="text"
+                name="preferred_location"
+                value={form.preferred_location}
+                onChange={handleChange}
+              />
+            ) : (
+              <span className="profile-readonly-value">
+                {form.preferred_location || "-"}
+              </span>
+            )}
           </div>
 
-          <div className="form-row">
-            <div className="form-field">
-              <label>Preferred Work Mode</label>
-              <select name="preferred_work_mode" value={form.preferred_work_mode} onChange={handleChange}>
-                {WORK_MODE_CHOICES.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-field">
-              <label>Preferred Location</label>
-              <input name="preferred_location" value={form.preferred_location} onChange={handleChange} />
-            </div>
-          </div>
-
-          <div className="form-field">
-            <label>Work Experience</label>
-            <textarea name="work_experience" value={form.work_experience} onChange={handleChange} />
-          </div>
-
-          <div className="form-field">
-            <label>Bio / Summary</label>
-            <textarea name="bio" value={form.bio} onChange={handleChange} />
-          </div>
-
-          <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? "Saving..." : "Save Profile"}
-          </button>
-        </form>
-
-        <h2 className="section-heading">Resume</h2>
-
-        {profile && profile.resume_url && (
-          <p>
-            Current resume:{" "}
-            <a href={profile.resume_url} target="_blank" rel="noreferrer" style={{ color: "#9ba8df" }}>
-              Download
-            </a>
-          </p>
-        )}
-
-        <div className="card" style={{ marginTop: "12px" }}>
-          <input
-            type="file"
-            accept=".pdf,.docx"
-            onChange={(e) => setResumeFile(e.target.files[0])}
-            style={{ marginBottom: "10px" }}
-          />
-          {resumeFile && <p style={{ fontSize: "13px", color: "#aeb8f2" }}>{resumeFile.name}</p>}
-          <div className="card-actions">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={handleResumeUpload}
-              disabled={!resumeFile}
-            >
-              Upload Resume
-            </button>
-          </div>
-        </div>
-
-        <div className="membership-box">
-          {user && user.membership ? (
-            <>
-              <h3>Premium Member</h3>
-              <p>You have unlimited job recommendations and full platform access.</p>
-            </>
-          ) : (
-            <>
+          {!user?.membership && (
+            <div className="profile-membership-box">
               <h3>Premium Membership</h3>
-              <p>Unlock unlimited job recommendations and priority visibility.</p>
+              <p>Unlock unlimited job recommendations and full platform access.</p>
               <button
                 type="button"
-                className="btn btn-primary"
+                className="profile-save-button"
                 onClick={handleUpgrade}
                 disabled={upgrading}
               >
                 {upgrading ? "Activating..." : "Start Free Trial"}
               </button>
-            </>
+            </div>
           )}
-        </div>
-      </div>
+
+          {leftEditMode && (
+            <button
+              type="button"
+              className="profile-save-button left-save"
+              onClick={() => saveProfile("left")}
+              disabled={saving}
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+          )}
+        </aside>
+
+        <section className="profile-right-panel">
+          <div className="profile-section-block">
+            <div className="profile-section-heading">
+              <h2>Work / Achievement</h2>
+              <button
+                type="button"
+                className="candidate-profile-edit-button"
+                onClick={() => setRightEditMode(true)}
+                disabled={rightEditMode || saving}
+              >
+                {rightEditMode ? "Editing" : "Edit"}
+              </button>
+            </div>
+
+            <label>Professional Summary:</label>
+            {rightEditMode ? (
+              <textarea
+                className="summary-textarea"
+                name="bio"
+                value={form.bio}
+                onChange={handleChange}
+              />
+            ) : (
+              <p className="profile-summary-readonly">
+                {form.bio || "No professional summary added yet."}
+              </p>
+            )}
+          </div>
+
+          <div className="profile-section-block">
+            <label>Experience:</label>
+            {rightEditMode ? (
+              <textarea
+                className="summary-textarea"
+                name="work_experience"
+                value={form.work_experience}
+                onChange={handleChange}
+              />
+            ) : (
+              <div className="profile-record-box">
+                <p className="profile-summary-readonly">
+                  {form.work_experience || "No work experience added yet."}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="profile-section-block">
+            <label>Education:</label>
+            <div className="profile-record-box">
+              <div className="record-line">
+                <span>Certification:</span>
+                {rightEditMode ? (
+                  <select
+                    name="education"
+                    value={form.education}
+                    onChange={handleChange}
+                  >
+                    {EDUCATION_CHOICES.map((choice) => (
+                      <option key={choice.value} value={choice.value}>
+                        {choice.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={getChoiceLabel(EDUCATION_CHOICES, form.education)}
+                    readOnly
+                  />
+                )}
+              </div>
+
+              <div className="record-line">
+                <span>Major:</span>
+                <input
+                  type="text"
+                  name="major"
+                  value={form.major}
+                  readOnly={!rightEditMode}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="profile-section-block compact-section">
+            <label>Skills:</label>
+
+            <div className="profile-tag-column">
+              {skills.length === 0 && (
+                <span className="profile-empty-note">No skills added yet.</span>
+              )}
+
+              {skills.map((skill) => (
+                <button
+                  type="button"
+                  className="profile-tag"
+                  key={skill}
+                  onClick={() => {
+                    if (rightEditMode) {
+                      removeSkill(skill);
+                    }
+                  }}
+                >
+                  {skill} {rightEditMode && <span>x</span>}
+                </button>
+              ))}
+            </div>
+
+            {rightEditMode && (
+              <div className="add-small-row">
+                <input
+                  type="text"
+                  value={newSkill}
+                  onChange={(event) => setNewSkill(event.target.value)}
+                  placeholder="Add skill"
+                />
+
+                <button type="button" onClick={addSkill}>
+                  +
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="profile-section-block">
+            <label>Resume:</label>
+            <div className="profile-resume-row">
+              {profile?.resume_url ? (
+                <a href={profile.resume_url} target="_blank" rel="noreferrer">
+                  Download current resume
+                </a>
+              ) : (
+                <span className="profile-empty-note">No resume uploaded.</span>
+              )}
+
+              <label className="profile-file-button">
+                Choose file
+                <input
+                  type="file"
+                  accept=".pdf,.docx"
+                  onChange={(event) => setResumeFile(event.target.files[0])}
+                />
+              </label>
+
+              {resumeFile && (
+                <span className="profile-selected-file">{resumeFile.name}</span>
+              )}
+
+              <button
+                type="button"
+                className="profile-save-button"
+                onClick={handleResumeUpload}
+                disabled={!resumeFile || uploading}
+              >
+                {uploading ? "Uploading..." : "Upload Resume"}
+              </button>
+            </div>
+          </div>
+
+          {rightEditMode && (
+            <button
+              type="button"
+              className="profile-save-button right-save"
+              onClick={() => saveProfile("right")}
+              disabled={saving}
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+          )}
+        </section>
+      </section>
     </main>
   );
 }

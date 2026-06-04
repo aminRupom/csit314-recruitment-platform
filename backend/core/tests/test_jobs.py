@@ -53,6 +53,38 @@ def test_employer_can_post_job(employer_client):
 
 
 @pytest.mark.django_db
+def test_employer_cannot_post_second_job(employer_client):
+    client, employer = employer_client
+    JobPosting.objects.create(
+        title="Existing Job",
+        company_name="Test Co",
+        description="Already posted",
+        required_skills="Python",
+        required_experience_years=2,
+        required_education="BACHELOR",
+        work_mode="REMOTE",
+        location="Sydney",
+        employer=employer,
+    )
+
+    response = client.post("/api/employer/jobs/", {
+        "title": "Second Job",
+        "company_name": "Test Co",
+        "company_info": "We test things.",
+        "description": "Build APIs",
+        "required_skills": "Python, Django",
+        "required_experience_years": 2,
+        "required_education": "BACHELOR",
+        "work_mode": "REMOTE",
+        "location": "Sydney",
+    }, format="json")
+
+    assert response.status_code == 400
+    assert response.data["detail"] == "Each employer account can only have one job posting."
+    assert JobPosting.objects.filter(employer=employer).count() == 1
+
+
+@pytest.mark.django_db
 def test_candidate_cannot_post_job(candidate_client):
     client, _ = candidate_client
     response = client.post("/api/employer/jobs/", {

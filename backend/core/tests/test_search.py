@@ -86,6 +86,22 @@ def test_fuzzy_search_tolerates_typos(candidate_client, employer):
 
 
 @pytest.mark.django_db
+def test_job_fuzzy_search_tolerates_artificial_typo(candidate_client, employer):
+    ai_job = _job(
+        employer,
+        "AI Engineer",
+        "Build Artificial Intelligence products",
+        "Artificial Intelligence, Python",
+    )
+    _job(employer, "Retail Assistant", "Help customers in store", "Customer service")
+
+    response = candidate_client.get("/api/jobs/?search=artifcal&fuzzy=true")
+    assert response.status_code == 200
+    ids = [j["id"] for j in response.data]
+    assert ai_job.id in ids, "typo 'artifcal' should match 'Artificial'"
+
+
+@pytest.mark.django_db
 def test_candidate_skill_filter(employer_client, db):
     client, emp_user = employer_client
 
@@ -158,3 +174,36 @@ def test_candidate_work_experience_keyword_search(employer_client, db):
     assert response.status_code == 200
     ids = [c["id"] for c in response.data]
     assert k8s_profile.id in ids, "candidate with 'Kubernetes' in work_experience should appear"
+
+
+@pytest.mark.django_db
+def test_candidate_fuzzy_search_tolerates_typos(employer_client, db):
+    client, _ = employer_client
+
+    ai_user = User.objects.create_user(username="ai_cand", password="x", role="CANDIDATE")
+    ai_profile = CandidateProfile.objects.create(
+        user=ai_user,
+        full_name="AI Candidate",
+        contact_email="ai@test.com",
+        major="Computer Science",
+        skills="Artificial Intelligence, Machine Learning",
+        years_experience=3,
+        education="BACHELOR",
+        work_experience="Built artificial intelligence prototypes.",
+    )
+    other_user = User.objects.create_user(username="other_art", password="x", role="CANDIDATE")
+    CandidateProfile.objects.create(
+        user=other_user,
+        full_name="Business Candidate",
+        contact_email="biz@test.com",
+        major="Business",
+        skills="Sales, Excel",
+        years_experience=2,
+        education="BACHELOR",
+        work_experience="Worked on retail operations.",
+    )
+
+    response = client.get("/api/candidates/?search=artifcal&fuzzy=true")
+    assert response.status_code == 200
+    ids = [c["id"] for c in response.data]
+    assert ai_profile.id in ids, "typo 'artifcal' should match 'Artificial'"

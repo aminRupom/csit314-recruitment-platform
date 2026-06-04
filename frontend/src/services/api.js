@@ -151,8 +151,17 @@ export async function getJobs() {
   return apiGet("/jobs/");
 }
 
-export async function searchJobs(query) {
-  return apiGet(`/jobs/?search=${encodeURIComponent(query)}`);
+export async function searchJobs(query, options = {}) {
+  const params = new URLSearchParams();
+  params.set("search", query);
+
+  Object.entries(options).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      params.set(key, value);
+    }
+  });
+
+  return apiGet(`/jobs/?${params.toString()}`);
 }
 
 export async function getJobById(id) {
@@ -165,6 +174,19 @@ export async function getRecommendedJobs() {
 
 export async function getRecommendedCandidates(jobId) {
   return apiGet(`/recommendations/candidates/${jobId}/`);
+}
+
+export async function getCandidates(params = {}) {
+  const query = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.set(key, value);
+    }
+  });
+
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  return apiGet(`/candidates/${suffix}`);
 }
 
 // ---------------------------------------------------------------------------
