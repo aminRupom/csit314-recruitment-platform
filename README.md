@@ -112,11 +112,13 @@ csit314-recruitment-platform/
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
+source .venv/bin/activate    # Windows:.venv\Scripts\activate
 pip install -r requirements.txt
+set OPENAI_API_KEY=sk-<your-key-here>
 python manage.py migrate
-python manage.py seed_data --flush  # optional: sample data
+python manage.py seed_data --flush
 python manage.py runserver
+
 ```
 
 API runs at `http://localhost:8000`.
@@ -125,8 +127,10 @@ API runs at `http://localhost:8000`.
 
 ```bash
 cd frontend
+printf "VITE_API_BASE_URL=http://127.0.0.1:8000/api\n" > frontend/.env         #Windows: echo VITE_API_BASE_URL=http://127.0.0.1:8000/api> .env
 npm install
 npm run dev
+
 ```
 
 Frontend runs at `http://localhost:5173`.
