@@ -49,9 +49,70 @@ def test_parse_resume_and_fill_profile_maps_fields(tmp_path, monkeypatch):
     assert updated.contact_phone == "0123456789"
     assert updated.major == "Computer Science"
     assert updated.years_experience == 5
+    assert updated.education == "MASTER"
     assert "python" in updated.skills
+    assert "django" in updated.skills
+    assert updated.work_experience == "Worked at X for 5 years"
     assert updated.preferred_work_mode == "REMOTE"
     assert updated.preferred_location == "Sydney"
+    assert updated.bio == "Experienced backend engineer"
+
+
+@pytest.mark.django_db
+def test_parse_resume_accepts_new_field_aliases(tmp_path, monkeypatch):
+    user = User.objects.create_user(username="alias_user", password="x", role="CANDIDATE")
+    profile = CandidateProfile.objects.create(
+        user=user,
+        full_name="Old",
+        contact_email="old@example.com",
+        major="",
+        skills="",
+        years_experience=0,
+        education="BACHELOR",
+    )
+
+    dummy = tmp_path / "alias.pdf"
+    dummy.write_bytes(b"%PDF-1.4 alias")
+    with open(dummy, "rb") as fh:
+        profile.resume.save("alias.pdf", File(fh), save=True)
+
+    parsed = {
+        "Full Name": "Taylor Nguyen",
+        "Contact Email": "taylor@example.com",
+        "Phone Number": "+61 411 222 333",
+        "Degree": "Bachelor of Information Technology",
+        "Field of Study": "Information Technology",
+        "Years Experience": "4 years",
+        "Skills (new)": ["React", "AWS", "SQL"],
+        "Work Experience New": [
+            {
+                "title": "Frontend Developer",
+                "company": "Example Co",
+                "summary": "Built recruitment dashboards",
+            }
+        ],
+        "Preferred Work Mode New": "Hybrid",
+        "Preferred Location New": "Melbourne, VIC",
+        "Summary": "Frontend engineer with dashboard experience.",
+    }
+
+    monkeypatch.setattr(resume_parser, "_extract_text_from_pdf", lambda p: "dummy text")
+    monkeypatch.setattr(resume_parser, "_call_openai_parse", lambda t: parsed)
+
+    updated = resume_parser.parse_resume_and_fill_profile(profile)
+
+    assert updated.full_name == "Taylor Nguyen"
+    assert updated.contact_email == "taylor@example.com"
+    assert updated.contact_phone == "+61 411 222 333"
+    assert updated.education == "BACHELOR"
+    assert updated.major == "Information Technology"
+    assert updated.years_experience == 4
+    assert "react" in updated.skills
+    assert "aws" in updated.skills
+    assert "Frontend Developer" in updated.work_experience
+    assert updated.preferred_work_mode == "HYBRID"
+    assert updated.preferred_location == "Melbourne, VIC"
+    assert updated.bio == "Frontend engineer with dashboard experience."
 
 
 @pytest.mark.django_db
@@ -132,6 +193,14 @@ def test_upload_resume_endpoint_calls_parser(tmp_path, monkeypatch):
     def fake_parser(p):
         p.full_name = "Parsed Name"
         p.contact_email = "parsed@example.com"
+        p.contact_phone = "0499999999"
+        p.education = "MASTER"
+        p.major = "Software Engineering"
+        p.years_experience = 6
+        p.skills = "python, django, aws"
+        p.work_experience = "Senior Developer at Parsed Co"
+        p.preferred_work_mode = "REMOTE"
+        p.preferred_location = "Sydney, NSW"
         p.save()
         return p
 
@@ -148,3 +217,12 @@ def test_upload_resume_endpoint_calls_parser(tmp_path, monkeypatch):
     data = resp.data
     assert data.get("full_name") == "Parsed Name"
     assert data.get("contact_email") == "parsed@example.com"
+    assert data.get("contact_phone") == "0499999999"
+    assert data.get("education") == "MASTER"
+    assert data.get("major") == "Software Engineering"
+    assert data.get("years_experience") == 6
+    assert data.get("skills") == "python, django, aws"
+    assert data.get("work_experience") == "Senior Developer at Parsed Co"
+    assert data.get("preferred_work_mode") == "REMOTE"
+    assert data.get("preferred_location") == "Sydney, NSW"
+    assert data.get("resume_url")

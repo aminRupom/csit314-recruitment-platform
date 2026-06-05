@@ -489,7 +489,8 @@
 }
 
 .modal-backdrop,
-.membership-modal-backdrop {
+.membership-modal-backdrop,
+.employer-trial-backdrop {
   position: fixed;
   inset: 0;
   z-index: 40;
@@ -500,7 +501,8 @@
 }
 
 .membership-plans-modal,
-.profile-modal {
+.profile-modal,
+.employer-trial-modal {
   position: relative;
   width: min(780px, 100%);
   max-height: calc(100vh - 40px);
@@ -510,6 +512,43 @@
   background: rgba(10, 14, 43, 0.98);
   padding: 24px;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+}
+
+.employer-trial-modal {
+  width: min(420px, 100%);
+}
+
+.employer-trial-modal h2 {
+  margin: 0 0 18px;
+  color: #ffffff;
+}
+
+.employer-trial-modal p {
+  color: #dce3ff;
+}
+
+.employer-trial-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.employer-trial-actions button {
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid #ffffff;
+  border-radius: 7px;
+  background: #9ba8df;
+  color: #090b18;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.employer-trial-actions button:hover {
+  background: #b3bef0;
 }
 
 .membership-plans-modal h2 {
@@ -654,5 +693,783 @@
     left: 16px;
     right: 16px;
     width: auto;
+  }
+}
+
+/* Employer dashboard wireframe */
+.employer-dashboard-page {
+  --employer-pad-x: 24px;
+  min-height: 100vh;
+  padding: 14px var(--employer-pad-x) 48px;
+  background: linear-gradient(115deg, #30345b 0%, #171b42 42%, #070b27 100%);
+}
+
+.employer-dashboard-page .employer-header,
+.employer-dashboard-page .employer-results-heading,
+.employer-dashboard-page .candidate-grid {
+  max-width: none;
+}
+
+.employer-dashboard-page .employer-title-row {
+  min-height: 90px;
+  margin-bottom: 13px;
+}
+
+.employer-dashboard-page .employer-title-row h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.employer-dashboard-page .employer-logout-button {
+  display: none;
+}
+
+.employer-dashboard-page .employer-profile-circle {
+  width: 88px;
+  height: 88px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.employer-dashboard-page .employer-profile-svg {
+  width: 55px;
+  height: 55px;
+  color: #ffffff;
+  stroke-width: 1.8;
+}
+
+.employer-dashboard-page .employer-search-section {
+  display: grid;
+  grid-template-columns: clamp(320px, 38vw, 415px) 54px max-content;
+  align-items: center;
+  gap: 12px;
+  margin: 0 calc(-1 * var(--employer-pad-x));
+  padding: 0 var(--employer-pad-x) 9px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.9);
+}
+
+.employer-dashboard-page .employer-search-box {
+  min-height: 40px;
+  gap: 8px;
+  border: 2px solid #7f89b1;
+  border-radius: 999px;
+  background: rgba(12, 18, 55, 0.75);
+  padding: 0 14px;
+}
+
+.employer-dashboard-page .employer-icon {
+  width: 18px;
+  height: 18px;
+  color: #ffffff;
+}
+
+.employer-dashboard-page .employer-search-box input {
+  font-size: 20px;
+}
+
+.employer-dashboard-page .employer-search-box input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.employer-dashboard-page .employer-filter-button {
+  width: 54px;
+  min-height: 40px;
+  border: 2px solid #7f89b1;
+  border-radius: 999px;
+  background: rgba(75, 83, 132, 0.78);
+  color: #ffffff;
+  padding: 0;
+}
+
+.employer-dashboard-page .employer-filter-button.active,
+.employer-dashboard-page .employer-filter-button:hover {
+  background: rgba(75, 83, 132, 0.95);
+  color: #ffffff;
+  transform: none;
+}
+
+.employer-dashboard-page .employer-filter-svg {
+  width: 27px;
+  height: 27px;
+}
+
+.employer-dashboard-page .suitable-candidates-button {
+  min-height: 40px;
+  border: 2px solid #3a9cf5;
+  border-left-color: #7d35d7;
+  border-radius: 999px;
+  background: rgba(12, 18, 55, 0.85);
+  color: #b8cdf9;
+  font-size: 20px;
+  font-weight: 400;
+  padding: 0 13px;
+}
+
+.employer-dashboard-page .suitable-candidates-button:hover {
+  background: rgba(22, 31, 83, 0.95);
+  color: #ffffff;
+  transform: none;
+}
+
+.employer-dashboard-page .employer-sparkles {
+  gap: 2px;
+  margin-left: 2px;
+}
+
+.employer-dashboard-page .employer-sparkles span {
+  position: relative;
+  width: 12px;
+  height: 20px;
+  overflow: hidden;
+  color: transparent;
+}
+
+.employer-dashboard-page .employer-sparkles span::before {
+  content: "";
+  position: absolute;
+  inset: 3px 1px;
+  background: #686aff;
+  clip-path: polygon(50% 0, 68% 35%, 100% 50%, 68% 65%, 50% 100%, 32% 65%, 0 50%, 32% 35%);
+}
+
+.employer-dashboard-page .employer-sparkles span:nth-child(2)::before {
+  background: #00a8ff;
+  transform: scale(0.7) translateY(6px);
+}
+
+.employer-dashboard-page .employer-active-job,
+.employer-dashboard-page .employer-results-heading {
+  display: none;
+}
+
+.employer-dashboard-page .employer-error-text,
+.employer-dashboard-page .employer-success-text {
+  max-width: none;
+  margin: 10px 0 0;
+}
+
+.employer-dashboard-page .candidate-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px 32px;
+  margin-top: 20px;
+}
+
+.employer-dashboard-page .candidate-card {
+  min-height: 210px;
+  gap: 0;
+  overflow: hidden;
+  border: 2px solid rgba(53, 61, 111, 0.75);
+  border-radius: 8px;
+  background: #202751;
+  padding: 0 8px 10px;
+}
+
+.employer-dashboard-page .candidate-card:first-child {
+  border-width: 3px;
+  border-color: #d8ddf4;
+  padding: 0 6px 8px;
+}
+
+.employer-dashboard-page .candidate-card.selected {
+  border-color: #008ce8;
+  background: #202751;
+}
+
+.employer-dashboard-page .candidate-card:hover {
+  border-color: #d8ddf4;
+  background: #222a58;
+}
+
+.employer-dashboard-page .candidate-card-top {
+  min-height: 80px;
+  align-items: center;
+  margin: 0 -8px;
+  padding: 10px 14px 10px 12px;
+  border-radius: 7px;
+  background: #444c7d;
+}
+
+.employer-dashboard-page .candidate-card:first-child .candidate-card-top {
+  margin: 0 -6px;
+}
+
+.employer-dashboard-page .candidate-card-top h2 {
+  margin: 0 0 6px;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 26px;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.employer-dashboard-page .candidate-card-top p {
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 23px;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.employer-dashboard-page .candidate-avatar {
+  width: 64px;
+  height: 64px;
+  border: 0;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(20, 25, 63, 0.95) 0 11px, transparent 12px),
+    radial-gradient(circle at 50% 78%, rgba(245, 245, 245, 0.95) 0 24px, transparent 25px),
+    linear-gradient(135deg, #d9b271, #f1d39a);
+  color: #15193d;
+  font-size: 18px;
+}
+
+.employer-dashboard-page .candidate-avatar img,
+.employer-dashboard-page .profile-photo img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.employer-dashboard-page .candidate-card-body {
+  gap: 10px;
+  padding-top: 13px;
+}
+
+.employer-dashboard-page .candidate-experience,
+.employer-dashboard-page .candidate-meta,
+.employer-dashboard-page .candidate-status {
+  color: #dce3ff;
+  font-size: 17px;
+  line-height: 1.15;
+}
+
+.employer-dashboard-page .candidate-skill-row {
+  gap: 8px;
+}
+
+.employer-dashboard-page .candidate-skill-pill,
+.employer-dashboard-page .candidate-extra-skill {
+  max-width: 100%;
+  overflow: hidden;
+  border: 2px solid rgba(200, 207, 233, 0.65);
+  border-radius: 999px;
+  background: transparent;
+  color: #dce3ff;
+  font-size: 17px;
+  line-height: 1;
+  padding: 6px 6px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.employer-dashboard-page .candidate-meta {
+  gap: 8px;
+  margin-top: 0;
+}
+
+.employer-dashboard-page .candidate-meta span {
+  color: transparent;
+  font-size: 0;
+}
+
+.employer-dashboard-page .candidate-meta span::before {
+  content: "\2022";
+  color: #dce3ff;
+  font-size: 17px;
+}
+
+.employer-dashboard-page .candidate-status {
+  margin-top: auto;
+  color: #aeb4d2;
+  text-align: right;
+}
+
+.employer-dashboard-page .employer-filter-panel,
+.employer-dashboard-page .recommendation-panel {
+  position: fixed;
+  z-index: 20;
+  right: auto;
+  border: 2px solid rgba(255, 255, 255, 0.88);
+  border-radius: 0;
+  background: rgba(32, 39, 84, 0.98);
+  box-shadow: none;
+}
+
+.employer-dashboard-page .employer-filter-panel {
+  left: clamp(320px, 40.5vw, 415px);
+  top: 149px;
+  width: min(364px, calc(100vw - 32px));
+  padding: 7px 14px 18px;
+}
+
+.employer-dashboard-page .filter-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  margin-bottom: 26px;
+}
+
+.employer-dashboard-page .filter-row label {
+  gap: 4px;
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: 400;
+}
+
+.employer-dashboard-page .filter-row select,
+.employer-dashboard-page .filter-row input {
+  min-height: 33px;
+  border: 2px solid #c7ccec;
+  border-radius: 7px;
+  background-color: #4a5489;
+  color: #d7def9;
+  font-size: 18px;
+  padding: 0 31px 0 9px;
+}
+
+.employer-dashboard-page .filter-row select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #c7ccec 50%),
+    linear-gradient(135deg, #c7ccec 50%, transparent 50%);
+  background-position: calc(100% - 17px) 12px, calc(100% - 9px) 12px;
+  background-repeat: no-repeat;
+  background-size: 8px 8px, 8px 8px;
+}
+
+.employer-dashboard-page .filter-check-section {
+  margin: 0 0 20px;
+}
+
+.employer-dashboard-page .filter-check-section p {
+  margin: 0 0 8px;
+  color: #ffffff;
+  font-size: 19px;
+}
+
+.employer-dashboard-page .filter-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 9px;
+  color: #ffffff;
+  font-size: 20px;
+}
+
+.employer-dashboard-page .filter-checkbox-row input {
+  width: 21px;
+  height: 21px;
+  flex: 0 0 auto;
+  accent-color: #a7b2e6;
+}
+
+.employer-dashboard-page .availability-section {
+  margin-bottom: 14px;
+}
+
+.employer-dashboard-page .filter-actions {
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.employer-dashboard-page .employer-filter-panel .clear-filter-button {
+  display: none;
+}
+
+.employer-dashboard-page .employer-filter-panel .apply-filter-button {
+  width: 131px;
+  min-height: 26px;
+  border: 0;
+  border-radius: 7px;
+  background: #a4b1e8;
+  color: #050827;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.employer-dashboard-page .recommendation-panel {
+  left: clamp(320px, 40vw, 410px);
+  top: 151px;
+  width: min(502px, calc(100vw - 32px));
+  min-height: 166px;
+  padding: 20px 38px 18px;
+}
+
+.employer-dashboard-page .recommendation-panel .close-modal-button,
+.employer-dashboard-page .recommendation-job-summary {
+  display: none;
+}
+
+.employer-dashboard-page .recommendation-title {
+  margin: 0 0 10px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.employer-dashboard-page .recommendation-range {
+  margin: 0;
+}
+
+.employer-dashboard-page .recommendation-slider {
+  width: 100%;
+  margin-top: 15px;
+  accent-color: #ffffff;
+}
+
+.employer-dashboard-page .range-labels {
+  margin-bottom: -8px;
+  color: #c9d0ed;
+  font-size: 14px;
+}
+
+.employer-dashboard-page .range-current-value {
+  top: 5px;
+  color: #ffffff;
+  font-size: 17px;
+}
+
+.employer-dashboard-page .recommendation-panel .membership-link {
+  width: auto;
+  margin: 24px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #08a8ff;
+  font-size: 12px;
+  font-weight: 400;
+  text-align: left;
+  text-decoration: underline;
+}
+
+.employer-dashboard-page .recommendation-panel .recommendation-actions {
+  justify-content: flex-end;
+}
+
+.employer-dashboard-page .modal-backdrop {
+  background: rgba(7, 11, 39, 0.32);
+  align-items: start;
+  padding-top: 12px;
+}
+
+.employer-dashboard-page .profile-modal {
+  width: min(695px, calc(100vw - 32px));
+  max-height: calc(100vh - 24px);
+  border: 3px solid #ffffff;
+  border-radius: 0;
+  background: #232957;
+  box-shadow: none;
+  padding: 20px 24px 32px;
+}
+
+.employer-dashboard-page .close-profile-button {
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.employer-dashboard-page .profile-main-heading {
+  align-items: flex-start;
+  margin: 0 0 16px 7px;
+}
+
+.employer-dashboard-page .profile-main-heading h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 42px;
+  line-height: 1;
+}
+
+.employer-dashboard-page .profile-main-heading p {
+  margin-top: 5px;
+  color: #ffffff;
+  font-size: 36px;
+  line-height: 1;
+}
+
+.employer-dashboard-page .profile-photo {
+  width: 140px;
+  height: 140px;
+  margin-right: 18px;
+  border: 0;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(20, 25, 63, 0.95) 0 25px, transparent 26px),
+    radial-gradient(circle at 50% 78%, rgba(245, 245, 245, 0.95) 0 55px, transparent 56px),
+    linear-gradient(135deg, #d9b271, #f1d39a);
+  color: #15193d;
+  font-size: 34px;
+}
+
+.employer-dashboard-page .contact-box {
+  width: min(491px, calc(100% - 150px));
+  display: grid;
+  gap: 4px;
+  margin: -61px 0 15px 0;
+  border: 2px solid #8f96be;
+  border-radius: 6px;
+  background: transparent;
+  padding: 7px 14px 7px 36px;
+}
+
+.employer-dashboard-page .contact-box p {
+  position: relative;
+  color: #ffffff;
+  font-size: 16px;
+  line-height: 1.15;
+}
+
+.employer-dashboard-page .contact-box p::before {
+  content: "";
+  position: absolute;
+  left: -25px;
+  top: 0;
+  width: 19px;
+  height: 19px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.85;
+}
+
+.employer-dashboard-page .contact-location::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aeb8f2' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s7-6.2 7-12A7 7 0 0 0 5 9c0 5.8 7 12 7 12Z'/%3E%3Ccircle cx='12' cy='9' r='2.2'/%3E%3C/svg%3E");
+}
+
+.employer-dashboard-page .contact-phone::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aeb8f2' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z'/%3E%3C/svg%3E");
+}
+
+.employer-dashboard-page .contact-email::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aeb8f2' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7h18v14H3z'/%3E%3Cpath d='m3 7 9 7 9-7'/%3E%3Cpath d='M7 7V4h10v3'/%3E%3C/svg%3E");
+}
+
+.employer-dashboard-page .profile-section {
+  margin-bottom: 16px;
+}
+
+.employer-dashboard-page .profile-section h3,
+.employer-dashboard-page .profile-bottom-grid h3 {
+  margin: 0 0 7px 7px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.employer-dashboard-page .profile-section > p {
+  margin-left: 7px;
+  max-width: 560px;
+  color: #dce3ff;
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+.employer-dashboard-page .profile-info-box {
+  border: 2px solid #8f96be;
+  border-radius: 6px;
+  background: transparent;
+  padding: 15px 15px;
+}
+
+.employer-dashboard-page .profile-info-box p {
+  color: #dce3ff;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.employer-dashboard-page .profile-info-box p + p {
+  margin-top: 1px;
+}
+
+.employer-dashboard-page .profile-info-box span {
+  color: #ffffff;
+  font-size: 18px;
+}
+
+.employer-dashboard-page .profile-bottom-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 46px;
+  width: min(430px, 100%);
+  margin-left: 7px;
+}
+
+.employer-dashboard-page .profile-bottom-grid ul {
+  color: #dce3ff;
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.employer-dashboard-page .membership-modal-backdrop {
+  background: rgba(7, 11, 39, 0.56);
+}
+
+.employer-dashboard-page .membership-plans-modal {
+  width: min(666px, calc(100vw - 28px));
+  min-height: 533px;
+  max-height: calc(100vh - 28px);
+  overflow: auto;
+  border: 0;
+  border-radius: 0;
+  background: #232957;
+  padding: 16px 17px 24px;
+  box-shadow: none;
+}
+
+.employer-dashboard-page .membership-close-button {
+  top: 8px;
+  right: 8px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.employer-dashboard-page .membership-plans-modal h2 {
+  margin: 0 0 67px;
+  color: #ffffff;
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1.08;
+}
+
+.employer-dashboard-page .membership-plan-grid {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 34px;
+  padding: 0 16px;
+}
+
+.employer-dashboard-page .membership-plan-card {
+  min-height: 390px;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid #ffffff;
+  border-radius: 31px;
+  background: transparent;
+  padding: 31px 39px 25px;
+}
+
+.employer-dashboard-page .membership-plan-card h3 {
+  margin: 0 0 10px;
+  color: #ffffff;
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+}
+
+.employer-dashboard-page .membership-plan-card ul {
+  margin: 0;
+  padding-left: 23px;
+  color: #dce3ff;
+  font-size: 24px;
+  line-height: 1.12;
+}
+
+.employer-dashboard-page .free-trial-button {
+  min-height: 59px;
+  margin-top: auto;
+  border: 2px solid #ffffff;
+  border-radius: 16px;
+  background: transparent;
+  color: #ffffff;
+  font-size: 23px;
+  font-weight: 400;
+}
+
+.employer-dashboard-page .free-trial-button:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+  transform: none;
+}
+
+@media (max-width: 900px) {
+  .employer-dashboard-page {
+    --employer-pad-x: 16px;
+  }
+
+  .employer-dashboard-page .employer-title-row {
+    min-height: 74px;
+  }
+
+  .employer-dashboard-page .employer-title-row h1 {
+    font-size: 40px;
+  }
+
+  .employer-dashboard-page .employer-profile-circle {
+    width: 72px;
+    height: 72px;
+  }
+
+  .employer-dashboard-page .employer-profile-svg {
+    width: 45px;
+    height: 45px;
+  }
+
+  .employer-dashboard-page .employer-search-section {
+    grid-template-columns: 1fr 52px;
+  }
+
+  .employer-dashboard-page .suitable-candidates-button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .employer-dashboard-page .candidate-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .employer-dashboard-page .employer-filter-panel,
+  .employer-dashboard-page .recommendation-panel {
+    left: 16px;
+    right: 16px;
+    width: auto;
+  }
+
+  .employer-dashboard-page .profile-modal {
+    padding: 18px;
+  }
+
+  .employer-dashboard-page .profile-main-heading {
+    flex-direction: column;
+  }
+
+  .employer-dashboard-page .profile-photo {
+    width: 100px;
+    height: 100px;
+    margin-right: 0;
+  }
+
+  .employer-dashboard-page .contact-box {
+    width: 100%;
+    margin: 0 0 16px;
+  }
+
+  .employer-dashboard-page .profile-bottom-grid,
+  .employer-dashboard-page .membership-plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .employer-dashboard-page .membership-plans-modal {
+    min-height: auto;
+    padding: 16px;
+  }
+
+  .employer-dashboard-page .membership-plans-modal h2 {
+    margin-bottom: 28px;
+    font-size: 36px;
+  }
+
+  .employer-dashboard-page .membership-plan-grid {
+    padding: 0;
+  }
+
+  .employer-dashboard-page .membership-plan-card {
+    min-height: auto;
+    padding: 26px;
   }
 }

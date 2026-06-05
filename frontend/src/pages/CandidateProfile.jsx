@@ -38,6 +38,13 @@ const DEFAULT_FORM = {
   preferred_location: "",
 };
 
+const EMPTY_EXPERIENCE = {
+  jobTitle: "",
+  companyName: "",
+  dateRange: "",
+  description: "",
+};
+
 function getProfileInitials(fullName) {
   return (
     fullName
@@ -59,6 +66,106 @@ function splitSkills(skills) {
     .split(",")
     .map((skill) => skill.trim())
     .filter(Boolean);
+}
+
+function parseBioSections(value) {
+  const text = (value || "").trim();
+
+  if (!text) {
+    return {
+      summary: "",
+      achievements: [],
+    };
+  }
+
+  const achievementMatch = text.match(/\bAchievements?:\s*/i);
+
+  if (!achievementMatch) {
+    return {
+      summary: text,
+      achievements: [],
+    };
+  }
+
+  const summary = text.slice(0, achievementMatch.index).trim();
+  const achievementText = text
+    .slice(achievementMatch.index + achievementMatch[0].length)
+    .trim();
+  const achievements = achievementText
+    .split(/,|\r?\n/)
+    .map((achievement) => achievement.replace(/^[-*]\s*/, "").trim())
+    .filter(Boolean);
+
+  return {
+    summary,
+    achievements,
+  };
+}
+
+function buildBio(summary, achievements) {
+  const cleanSummary = summary.trim();
+  const cleanAchievements = achievements
+    .map((achievement) => achievement.trim())
+    .filter(Boolean);
+
+  return [
+    cleanSummary,
+    cleanAchievements.length
+      ? `Achievements: ${cleanAchievements.join(", ")}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function parseWorkExperience(value) {
+  const text = (value || "").trim();
+
+  if (!text) {
+    return EMPTY_EXPERIENCE;
+  }
+
+  const [headingLine = "", ...descriptionLines] = text.split(/\r?\n/);
+  let heading = headingLine.trim();
+  let dateRange = "";
+  const dateMatch = heading.match(/\(([^()]*)\)\s*$/);
+
+  if (dateMatch) {
+    dateRange = dateMatch[1].trim();
+    heading = heading.slice(0, dateMatch.index).trim();
+  }
+
+  const atMarker = " at ";
+  const atIndex = heading.toLowerCase().lastIndexOf(atMarker);
+  const jobTitle =
+    atIndex >= 0 ? heading.slice(0, atIndex).trim() : heading.trim();
+  const companyName =
+    atIndex >= 0 ? heading.slice(atIndex + atMarker.length).trim() : "";
+
+  return {
+    jobTitle,
+    companyName,
+    dateRange,
+    description: descriptionLines.join("\n").trim(),
+  };
+}
+
+function buildWorkExperience(experience) {
+  const jobTitle = experience.jobTitle.trim();
+  const companyName = experience.companyName.trim();
+  const dateRange = experience.dateRange.trim();
+  const description = experience.description.trim();
+  let heading = jobTitle;
+
+  if (companyName) {
+    heading = heading ? `${heading} at ${companyName}` : companyName;
+  }
+
+  if (dateRange) {
+    heading = heading ? `${heading} (${dateRange})` : `(${dateRange})`;
+  }
+
+  return [heading, description].filter(Boolean).join("\n");
 }
 
 function getSectionPayload(form, section) {
@@ -96,10 +203,16 @@ function CandidateProfile() {
   const [message, setMessage] = useState("");
   const [resumeFile, setResumeFile] = useState(null);
   const [newSkill, setNewSkill] = useState("");
+  const [newAchievement, setNewAchievement] = useState("");
   const [leftEditMode, setLeftEditMode] = useState(false);
   const [rightEditMode, setRightEditMode] = useState(false);
 
   const skills = useMemo(() => splitSkills(form.skills), [form.skills]);
+  const bioSections = useMemo(() => parseBioSections(form.bio), [form.bio]);
+  const workExperience = useMemo(
+    () => parseWorkExperience(form.work_experience),
+    [form.work_experience]
+  );
 
   function applyProfileToForm(data) {
     setForm({
@@ -203,6 +316,68 @@ function CandidateProfile() {
     }));
   }
 
+  function updateBioSummary(summary) {
+    setForm((currentForm) => {
+      const currentBio = parseBioSections(currentForm.bio);
+
+      return {
+        ...currentForm,
+        bio: buildBio(summary, currentBio.achievements),
+      };
+    });
+  }
+
+  function addAchievement() {
+    if (!newAchievement.trim()) {
+      return;
+    }
+
+    setForm((currentForm) => {
+      const currentBio = parseBioSections(currentForm.bio);
+
+      return {
+        ...currentForm,
+        bio: buildBio(currentBio.summary, [
+          ...currentBio.achievements,
+          newAchievement.trim(),
+        ]),
+      };
+    });
+    setNewAchievement("");
+  }
+
+  function removeAchievement(achievementToRemove) {
+    setForm((currentForm) => {
+      const currentBio = parseBioSections(currentForm.bio);
+
+      return {
+        ...currentForm,
+        bio: buildBio(
+          currentBio.summary,
+          currentBio.achievements.filter(
+            (achievement) => achievement !== achievementToRemove
+          )
+        ),
+      };
+    });
+  }
+
+  function updateWorkExperienceField(field, value) {
+    setForm((currentForm) => {
+      const currentExperience = parseWorkExperience(
+        currentForm.work_experience
+      );
+
+      return {
+        ...currentForm,
+        work_experience: buildWorkExperience({
+          ...currentExperience,
+          [field]: value,
+        }),
+      };
+    });
+  }
+
   async function handleResumeUpload() {
     if (!resumeFile) {
       return;
@@ -260,18 +435,18 @@ function CandidateProfile() {
         <div className="profile-nav-actions">
           <button
             type="button"
-            className="profile-back-button"
-            onClick={() => navigate("/candidate-dashboard")}
-          >
-            Back
-          </button>
-
-          <button
-            type="button"
             className="profile-logout-button"
             onClick={handleLogout}
           >
             Logout
+          </button>
+
+          <button
+            type="button"
+            className="profile-back-button"
+            onClick={() => navigate("/candidate-dashboard")}
+          >
+            Back
           </button>
         </div>
 
@@ -289,7 +464,7 @@ function CandidateProfile() {
             </p>
             {user?.membership && (
               <span className="profile-membership-badge">
-                Pro User - Free Trial Active
+                pro user-trial activated
               </span>
             )}
           </div>
@@ -299,21 +474,28 @@ function CandidateProfile() {
         {message && <p className="profile-save-message">{message}</p>}
       </header>
 
-      <section className="profile-content-grid">
-        <aside className="profile-left-panel">
-          <section className="profile-section-block">
-            <div className="profile-section-heading">
-              <h2>Personal Info</h2>
+      <section
+        className={`profile-content-grid ${
+          leftEditMode || rightEditMode ? "profile-editing-layout" : ""
+        }`}
+      >
+        <aside
+          className={`profile-left-panel ${
+            leftEditMode ? "profile-panel-editing" : ""
+          }`}
+        >
+          <div className="profile-panel-action-row">
+            {!leftEditMode && (
               <button
                 type="button"
                 className="candidate-profile-edit-button"
                 onClick={() => setLeftEditMode(true)}
-                disabled={leftEditMode || saving}
+                disabled={saving}
               >
-                {leftEditMode ? "Editing" : "Edit"}
+                Edit
               </button>
-            </div>
-          </section>
+            )}
+          </div>
 
           <div className="profile-inline-field">
             <label>Full name:</label>
@@ -328,6 +510,15 @@ function CandidateProfile() {
               <span className="profile-readonly-value">
                 {form.full_name || "-"}
               </span>
+            )}
+          </div>
+
+          <div className="profile-inline-field">
+            <label>Date of Birth:</label>
+            {leftEditMode ? (
+              <input type="text" value="-" disabled />
+            ) : (
+              <span className="profile-readonly-value">-</span>
             )}
           </div>
 
@@ -348,17 +539,6 @@ function CandidateProfile() {
           </div>
 
           <div className="profile-inline-field">
-            <label>Membership:</label>
-            <span
-              className={
-                user?.membership ? "profile-pro-value" : "profile-readonly-value"
-              }
-            >
-              {user?.membership ? "Pro user - free trial active" : "Standard user"}
-            </span>
-          </div>
-
-          <div className="profile-inline-field">
             <label>Phone Number:</label>
             {leftEditMode ? (
               <input
@@ -374,19 +554,14 @@ function CandidateProfile() {
             )}
           </div>
 
-          <div className="profile-inline-field">
-            <label>Years Experience:</label>
+          <div className="profile-inline-field profile-address-field">
+            <label>Address:</label>
             {leftEditMode ? (
-              <input
-                type="number"
-                name="years_experience"
-                min="0"
-                value={form.years_experience}
-                onChange={handleChange}
-              />
+              <input type="text" value="-" disabled />
             ) : (
-              <span className="profile-readonly-value">
-                {form.years_experience}
+              <span className="profile-address-lines" aria-label="Address not set">
+                <span></span>
+                <span></span>
               </span>
             )}
           </div>
@@ -428,8 +603,28 @@ function CandidateProfile() {
             )}
           </div>
 
+          <div className="profile-inline-field">
+            <label>Availability:</label>
+            {leftEditMode ? (
+              <select value="Ready to work now" disabled>
+                <option>Ready to work now</option>
+              </select>
+            ) : (
+              <span className="profile-readonly-value">Ready to work now</span>
+            )}
+          </div>
+
+          <div className="profile-inline-field">
+            <label>Password:</label>
+            {leftEditMode ? (
+              <input type="password" value="*************" disabled />
+            ) : (
+              <span className="profile-readonly-value">*************</span>
+            )}
+          </div>
+
           {!user?.membership && (
-            <div className="profile-membership-box">
+            <div className="profile-membership-box profile-hidden-addon">
               <h3>Premium Membership</h3>
               <p>Unlock unlimited job recommendations and full platform access.</p>
               <button
@@ -455,31 +650,35 @@ function CandidateProfile() {
           )}
         </aside>
 
-        <section className="profile-right-panel">
-          <div className="profile-section-block">
-            <div className="profile-section-heading">
-              <h2>Work / Achievement</h2>
+        <section
+          className={`profile-right-panel ${
+            rightEditMode ? "profile-panel-editing" : ""
+          }`}
+        >
+          <div className="profile-panel-action-row profile-right-action-row">
+            {!rightEditMode && (
               <button
                 type="button"
                 className="candidate-profile-edit-button"
                 onClick={() => setRightEditMode(true)}
-                disabled={rightEditMode || saving}
+                disabled={saving}
               >
-                {rightEditMode ? "Editing" : "Edit"}
+                Edit
               </button>
-            </div>
+            )}
+          </div>
 
+          <div className="profile-section-block">
             <label>Professional Summary:</label>
             {rightEditMode ? (
               <textarea
                 className="summary-textarea"
-                name="bio"
-                value={form.bio}
-                onChange={handleChange}
+                value={bioSections.summary}
+                onChange={(event) => updateBioSummary(event.target.value)}
               />
             ) : (
               <p className="profile-summary-readonly">
-                {form.bio || "No professional summary added yet."}
+                {bioSections.summary || "No professional summary added yet."}
               </p>
             )}
           </div>
@@ -487,16 +686,88 @@ function CandidateProfile() {
           <div className="profile-section-block">
             <label>Experience:</label>
             {rightEditMode ? (
-              <textarea
-                className="summary-textarea"
-                name="work_experience"
-                value={form.work_experience}
-                onChange={handleChange}
-              />
+              <>
+                <div className="profile-record-box profile-edit-record-box">
+                  <button
+                    type="button"
+                    className="profile-record-remove-button"
+                    aria-label="Remove experience"
+                    disabled
+                  >
+                    x
+                  </button>
+
+                  <div className="record-line">
+                    <label>Job Title:</label>
+                    <input
+                      type="text"
+                      value={workExperience.jobTitle}
+                      onChange={(event) =>
+                        updateWorkExperienceField("jobTitle", event.target.value)
+                      }
+                    />
+                  </div>
+
+                  <div className="record-line">
+                    <label>Company Name:</label>
+                    <input
+                      type="text"
+                      value={workExperience.companyName}
+                      onChange={(event) =>
+                        updateWorkExperienceField(
+                          "companyName",
+                          event.target.value
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div className="record-line">
+                    <label>Start Date - End Date:</label>
+                    <input
+                      type="text"
+                      value={workExperience.dateRange}
+                      onChange={(event) =>
+                        updateWorkExperienceField("dateRange", event.target.value)
+                      }
+                    />
+                  </div>
+
+                  <div className="record-line">
+                    <label>Job description:</label>
+                    <input
+                      type="text"
+                      value={workExperience.description}
+                      onChange={(event) =>
+                        updateWorkExperienceField(
+                          "description",
+                          event.target.value
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+
+                <button type="button" className="profile-add-link" disabled>
+                  Add another job +
+                </button>
+              </>
             ) : (
-              <div className="profile-record-box">
-                <p className="profile-summary-readonly">
-                  {form.work_experience || "No work experience added yet."}
+              <div className="profile-readonly-stack">
+                <p>
+                  <span>Job Title:</span> {workExperience.jobTitle || "-"}
+                </p>
+                <p>
+                  <span>Company Name:</span>{" "}
+                  {workExperience.companyName || "-"}
+                </p>
+                <p>
+                  <span>Start Date - End Date:</span>{" "}
+                  {workExperience.dateRange || "-"}
+                </p>
+                <p>
+                  <span>Job description:</span>{" "}
+                  {workExperience.description || "-"}
                 </p>
               </div>
             )}
@@ -504,84 +775,178 @@ function CandidateProfile() {
 
           <div className="profile-section-block">
             <label>Education:</label>
-            <div className="profile-record-box">
-              <div className="record-line">
-                <span>Certification:</span>
-                {rightEditMode ? (
-                  <select
-                    name="education"
-                    value={form.education}
-                    onChange={handleChange}
+            {rightEditMode ? (
+              <>
+                <div className="profile-record-box profile-edit-record-box">
+                  <button
+                    type="button"
+                    className="profile-record-remove-button"
+                    aria-label="Remove education"
+                    disabled
                   >
-                    {EDUCATION_CHOICES.map((choice) => (
-                      <option key={choice.value} value={choice.value}>
-                        {choice.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    value={getChoiceLabel(EDUCATION_CHOICES, form.education)}
-                    readOnly
-                  />
-                )}
-              </div>
+                    x
+                  </button>
 
-              <div className="record-line">
-                <span>Major:</span>
-                <input
-                  type="text"
-                  name="major"
-                  value={form.major}
-                  readOnly={!rightEditMode}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
+                  <div className="record-line">
+                    <label>Certification:</label>
+                    <select
+                      name="education"
+                      value={form.education}
+                      onChange={handleChange}
+                    >
+                      {EDUCATION_CHOICES.map((choice) => (
+                        <option key={choice.value} value={choice.value}>
+                          {choice.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-          <div className="profile-section-block compact-section">
-            <label>Skills:</label>
+                  <div className="record-line">
+                    <label>School Name:</label>
+                    <input
+                      type="text"
+                      name="major"
+                      value={form.major}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-            <div className="profile-tag-column">
-              {skills.length === 0 && (
-                <span className="profile-empty-note">No skills added yet.</span>
-              )}
+                  <div className="record-line">
+                    <label>Start Date - End Date:</label>
+                    <input type="text" value="-" disabled />
+                  </div>
+                </div>
 
-              {skills.map((skill) => (
-                <button
-                  type="button"
-                  className="profile-tag"
-                  key={skill}
-                  onClick={() => {
-                    if (rightEditMode) {
-                      removeSkill(skill);
-                    }
-                  }}
-                >
-                  {skill} {rightEditMode && <span>x</span>}
+                <button type="button" className="profile-add-link" disabled>
+                  Add another education certificate +
                 </button>
-              ))}
-            </div>
-
-            {rightEditMode && (
-              <div className="add-small-row">
-                <input
-                  type="text"
-                  value={newSkill}
-                  onChange={(event) => setNewSkill(event.target.value)}
-                  placeholder="Add skill"
-                />
-
-                <button type="button" onClick={addSkill}>
-                  +
-                </button>
+              </>
+            ) : (
+              <div className="profile-readonly-stack">
+                <p>
+                  <span>Certification:</span>{" "}
+                  {getChoiceLabel(EDUCATION_CHOICES, form.education)}
+                </p>
+                <p>
+                  <span>School Name:</span> {form.major || "-"}
+                </p>
+                <p>
+                  <span>Start Date - End Date:</span> -
+                </p>
               </div>
             )}
           </div>
 
-          <div className="profile-section-block">
+          <div className="profile-section-block compact-section">
+            <label>Achievement:</label>
+            {rightEditMode ? (
+              <>
+                <div className="profile-tag-column profile-edit-tags">
+                  {bioSections.achievements.length === 0 && (
+                    <span className="profile-empty-note">
+                      No achievements added yet.
+                    </span>
+                  )}
+
+                  {bioSections.achievements.map((achievement) => (
+                    <button
+                      type="button"
+                      className="profile-tag"
+                      key={achievement}
+                      onClick={() => removeAchievement(achievement)}
+                    >
+                      {achievement} <span>x</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="add-small-row profile-add-inline-row">
+                  <input
+                    type="text"
+                    value={newAchievement}
+                    onChange={(event) => setNewAchievement(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        addAchievement();
+                      }
+                    }}
+                    placeholder="Add achievement"
+                  />
+
+                  <button type="button" onClick={addAchievement}>
+                    +
+                  </button>
+                </div>
+              </>
+            ) : (
+              <ul className="profile-list-values">
+                {bioSections.achievements.length === 0 ? (
+                  <li>No achievements added yet.</li>
+                ) : (
+                  bioSections.achievements.map((achievement) => (
+                    <li key={achievement}>{achievement}</li>
+                  ))
+                )}
+              </ul>
+            )}
+          </div>
+
+          <div className="profile-section-block compact-section">
+            <label>Skills:</label>
+            {rightEditMode ? (
+              <>
+                <div className="profile-tag-column profile-edit-tags">
+                  {skills.length === 0 && (
+                    <span className="profile-empty-note">
+                      No skills added yet.
+                    </span>
+                  )}
+
+                  {skills.map((skill) => (
+                    <button
+                      type="button"
+                      className="profile-tag"
+                      key={skill}
+                      onClick={() => removeSkill(skill)}
+                    >
+                      {skill} <span>x</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="add-small-row profile-add-inline-row">
+                  <input
+                    type="text"
+                    value={newSkill}
+                    onChange={(event) => setNewSkill(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        addSkill();
+                      }
+                    }}
+                    placeholder="Add skill"
+                  />
+
+                  <button type="button" onClick={addSkill}>
+                    +
+                  </button>
+                </div>
+              </>
+            ) : (
+              <ul className="profile-list-values">
+                {skills.length === 0 ? (
+                  <li>No skills added yet.</li>
+                ) : (
+                  skills.map((skill) => <li key={skill}>{skill}</li>)
+                )}
+              </ul>
+            )}
+          </div>
+
+          <div className="profile-section-block profile-hidden-addon">
             <label>Resume:</label>
             <div className="profile-resume-row">
               {profile?.resume_url ? (

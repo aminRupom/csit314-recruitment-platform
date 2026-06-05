@@ -46,6 +46,53 @@ const BLANK_JOB_FORM = {
   employment_type: "FULL_TIME",
 };
 
+function splitDescriptionSections(value) {
+  const text = value || "";
+  const responsibilitiesMatch = text.match(/\n\nResponsibilities:\n/i);
+  const benefitsMatch = text.match(/\n\nBenefits:\n/i);
+  const firstSectionIndex = [responsibilitiesMatch?.index, benefitsMatch?.index]
+    .filter((index) => Number.isFinite(index))
+    .sort((a, b) => a - b)[0];
+  const mainDescription =
+    firstSectionIndex === undefined
+      ? text.trim()
+      : text.slice(0, firstSectionIndex).trim();
+
+  function extractList(match, nextMatch) {
+    if (!match) {
+      return [];
+    }
+
+    const start = match.index + match[0].length;
+    const end = nextMatch?.index && nextMatch.index > start ? nextMatch.index : text.length;
+
+    return text
+      .slice(start, end)
+      .split(/\r?\n/)
+      .map((item) => item.replace(/^[-*]\s*/, "").trim())
+      .filter(Boolean);
+  }
+
+  return {
+    mainDescription,
+    responsibilities: extractList(responsibilitiesMatch, benefitsMatch),
+    benefits: extractList(benefitsMatch, null),
+  };
+}
+
+function buildDescription(mainDescription, responsibilities, benefits) {
+  const responsibilityText = responsibilities.length
+    ? `\n\nResponsibilities:\n${responsibilities
+        .map((item) => `- ${item}`)
+        .join("\n")}`
+    : "";
+  const benefitText = benefits.length
+    ? `\n\nBenefits:\n${benefits.map((item) => `- ${item}`).join("\n")}`
+    : "";
+
+  return `${mainDescription.trim()}${responsibilityText}${benefitText}`.trim();
+}
+
 function getChoiceLabel(choices, value) {
   return choices.find((choice) => choice.value === value)?.label || value || "-";
 }
@@ -107,6 +154,12 @@ export default function EmployerProfile() {
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
+  const [newResponsibility, setNewResponsibility] = useState("");
+  const [newSkill, setNewSkill] = useState("");
+  const [newBenefit, setNewBenefit] = useState("");
+
+  const descriptionSections = splitDescriptionSections(form.description);
+  const requiredSkills = splitCommaList(form.required_skills);
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -195,12 +248,98 @@ export default function EmployerProfile() {
     return true;
   }
 
+  function updateDescriptionSections(nextSections) {
+    const currentSections = splitDescriptionSections(form.description);
+    const mergedSections = {
+      ...currentSections,
+      ...nextSections,
+    };
+
+    setForm((currentForm) => ({
+      ...currentForm,
+      description: buildDescription(
+        mergedSections.mainDescription,
+        mergedSections.responsibilities,
+        mergedSections.benefits
+      ),
+    }));
+    setJobValidationMessage("");
+  }
+
+  function addResponsibility() {
+    if (!newResponsibility.trim()) {
+      return;
+    }
+
+    updateDescriptionSections({
+      responsibilities: [
+        ...descriptionSections.responsibilities,
+        newResponsibility.trim(),
+      ],
+    });
+    setNewResponsibility("");
+  }
+
+  function removeResponsibility(itemToRemove) {
+    updateDescriptionSections({
+      responsibilities: descriptionSections.responsibilities.filter(
+        (item) => item !== itemToRemove
+      ),
+    });
+  }
+
+  function addSkill() {
+    if (!newSkill.trim()) {
+      return;
+    }
+
+    setForm((currentForm) => ({
+      ...currentForm,
+      required_skills: [...requiredSkills, newSkill.trim()].join(", "),
+    }));
+    setNewSkill("");
+    setJobValidationMessage("");
+  }
+
+  function removeSkill(skillToRemove) {
+    setForm((currentForm) => ({
+      ...currentForm,
+      required_skills: requiredSkills
+        .filter((skill) => skill !== skillToRemove)
+        .join(", "),
+    }));
+    setJobValidationMessage("");
+  }
+
+  function addBenefit() {
+    if (!newBenefit.trim()) {
+      return;
+    }
+
+    updateDescriptionSections({
+      benefits: [...descriptionSections.benefits, newBenefit.trim()],
+    });
+    setNewBenefit("");
+  }
+
+  function removeBenefit(itemToRemove) {
+    updateDescriptionSections({
+      benefits: descriptionSections.benefits.filter(
+        (item) => item !== itemToRemove
+      ),
+    });
+  }
+
   async function saveProfileChanges(section) {
     if (section === "company" && !validateCompanyFields()) {
       return;
     }
 
-    if (!validateJobFields()) {
+    if (section === "job" && !validateJobFields()) {
+      return;
+    }
+
+    if (section === "company" && !activeJob && !validateJobFields()) {
       return;
     }
 
@@ -277,7 +416,7 @@ export default function EmployerProfile() {
           <p>{form.location || "No active job location set"}</p>
           {user?.membership && (
             <span className="employer-membership-badge">
-              Pro User - Free Trial Active
+              pro user-trial activated
             </span>
           )}
         </div>
@@ -319,13 +458,17 @@ export default function EmployerProfile() {
 
                 <div className="profile-field-row">
                   <label>Email:</label>
-                  <span>{user?.email || "-"}</span>
+                  {isEditingCompany ? (
+                    <input value={user?.email || "-"} disabled />
+                  ) : (
+                    <span>{user?.email || "-"}</span>
+                  )}
                 </div>
 
                 <div className="profile-field-row address-row">
-                  <label>Company info:</label>
+                  <label>Address:</label>
                   {isEditingCompany ? (
-                    <textarea
+                    <input
                       name="company_info"
                       required
                       value={form.company_info}
@@ -341,22 +484,35 @@ export default function EmployerProfile() {
 
               <div className="info-column">
                 <div className="profile-field-row">
-                  <label>Username:</label>
-                  <span>{user?.username || "-"}</span>
+                  <label>Phone Number:</label>
+                  {isEditingCompany ? (
+                    <input value="+04xxxxxxxxxx" disabled />
+                  ) : (
+                    <span>+04xxxxxxxxxx</span>
+                  )}
                 </div>
 
                 <div className="profile-field-row">
-                  <label>Role:</label>
-                  <span>{user?.role || "-"}</span>
+                  <label>Website:</label>
+                  {isEditingCompany ? (
+                    <input value="www.company.com" disabled />
+                  ) : (
+                    <span>www.company.com</span>
+                  )}
                 </div>
 
-                <div className="profile-field-row">
-                  <label>Member since:</label>
-                  <span>
-                    {user?.date_joined
-                      ? new Date(user.date_joined).toLocaleDateString()
-                      : "-"}
-                  </span>
+                <div className="profile-field-row password-profile-row">
+                  <label>Password:</label>
+                  {isEditingCompany ? (
+                    <span className="password-input-shell">
+                      <input type="password" value="*************" disabled />
+                      <span className="password-eye" aria-hidden="true"></span>
+                    </span>
+                  ) : (
+                    <span className="password-readonly-value">
+                      ************* <span className="password-eye" aria-hidden="true"></span>
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -407,13 +563,6 @@ export default function EmployerProfile() {
                 {activeJob ? "Edit" : "Create Job Posting"}
               </button>
             )}
-
-            <div className="single-job-note">
-              <strong>Single active job posting</strong>
-              <p>
-                Candidate recommendations are matched to this posting only.
-              </p>
-            </div>
 
             <div className="job-form-content">
               <div className="job-profile-row">
@@ -487,14 +636,74 @@ export default function EmployerProfile() {
 
                 {isEditingJob ? (
                   <textarea
-                    name="description"
-                    value={form.description}
-                    onChange={handleChange}
+                    value={descriptionSections.mainDescription}
+                    onChange={(event) =>
+                      updateDescriptionSections({
+                        mainDescription: event.target.value,
+                      })
+                    }
                   />
                 ) : (
                   <div className="description-text">
-                    {form.description || "-"}
+                    {descriptionSections.mainDescription || "-"}
                   </div>
+                )}
+              </div>
+
+              <div className="array-section responsibilities-section">
+                <strong>Responsibilities</strong>
+
+                {isEditingJob ? (
+                  <>
+                    <div className="editable-pill-column">
+                      {descriptionSections.responsibilities.map((item) => (
+                        <button
+                          type="button"
+                          key={item}
+                          className="editable-pill"
+                          onClick={() => removeResponsibility(item)}
+                        >
+                          {item} <span>x</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="add-inline-row">
+                      <input
+                        type="text"
+                        value={newResponsibility}
+                        onChange={(event) =>
+                          setNewResponsibility(event.target.value)
+                        }
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            addResponsibility();
+                          }
+                        }}
+                        placeholder="Add responsibility"
+                      />
+                      <button type="button" onClick={addResponsibility}>
+                        +
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      className="profile-add-link"
+                      onClick={addResponsibility}
+                    >
+                      Add another responsibility +
+                    </button>
+                  </>
+                ) : (
+                  <ul>
+                    {(descriptionSections.responsibilities.length > 0
+                      ? descriptionSections.responsibilities
+                      : ["No responsibilities listed"]
+                    ).map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
                 )}
               </div>
 
@@ -520,15 +729,19 @@ export default function EmployerProfile() {
               </div>
 
               <div className="job-profile-row">
-                <strong>Years of relevant experience:</strong>
+                <strong>Required Years of Relevant Experience:</strong>
                 {isEditingJob ? (
-                  <input
-                    type="number"
-                    min="0"
+                  <select
                     name="required_experience_years"
                     value={form.required_experience_years}
                     onChange={handleChange}
-                  />
+                  >
+                    <option value="0">0 Years</option>
+                    <option value="1">1 Year</option>
+                    <option value="3">3 Years</option>
+                    <option value="5">5 Years</option>
+                    <option value="10">10 Years</option>
+                  </select>
                 ) : (
                   <span>
                     {form.required_experience_years || 0} year
@@ -541,16 +754,49 @@ export default function EmployerProfile() {
                 <strong>Required Skills:</strong>
 
                 {isEditingJob ? (
-                  <textarea
-                    name="required_skills"
-                    value={form.required_skills}
-                    onChange={handleChange}
-                    placeholder="Java, TypeScript, React"
-                  />
+                  <>
+                    <div className="editable-pill-column">
+                      {requiredSkills.map((skill) => (
+                        <button
+                          type="button"
+                          key={skill}
+                          className="editable-pill"
+                          onClick={() => removeSkill(skill)}
+                        >
+                          {skill} <span>x</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="add-inline-row">
+                      <input
+                        type="text"
+                        value={newSkill}
+                        onChange={(event) => setNewSkill(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            addSkill();
+                          }
+                        }}
+                        placeholder="Add skill"
+                      />
+                      <button type="button" onClick={addSkill}>
+                        +
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      className="profile-add-link"
+                      onClick={addSkill}
+                    >
+                      Add another skill requirement +
+                    </button>
+                  </>
                 ) : (
                   <ul>
-                    {(splitCommaList(form.required_skills).length > 0
-                      ? splitCommaList(form.required_skills)
+                    {(requiredSkills.length > 0
+                      ? requiredSkills
                       : ["No skills listed"]
                     ).map((skill) => (
                       <li key={skill}>{skill}</li>
@@ -562,24 +808,70 @@ export default function EmployerProfile() {
               <div className="job-profile-row">
                 <strong>Salary:</strong>
                 {isEditingJob ? (
-                  <div className="salary-input-grid">
-                    <input
-                      type="number"
-                      name="salary_min"
-                      value={form.salary_min}
-                      onChange={handleChange}
-                      placeholder="Min"
-                    />
-                    <input
-                      type="number"
-                      name="salary_max"
-                      value={form.salary_max}
-                      onChange={handleChange}
-                      placeholder="Max"
-                    />
-                  </div>
+                  <input
+                    type="number"
+                    name="salary_min"
+                    value={form.salary_min}
+                    onChange={handleChange}
+                    placeholder="50000"
+                  />
                 ) : (
                   <span>{getSalaryText(form)}</span>
+                )}
+              </div>
+
+              <div className="array-section benefits-section">
+                <strong>Benefits:</strong>
+
+                {isEditingJob ? (
+                  <>
+                    <div className="editable-pill-column">
+                      {descriptionSections.benefits.map((item) => (
+                        <button
+                          type="button"
+                          key={item}
+                          className="editable-pill"
+                          onClick={() => removeBenefit(item)}
+                        >
+                          {item} <span>x</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="add-inline-row">
+                      <input
+                        type="text"
+                        value={newBenefit}
+                        onChange={(event) => setNewBenefit(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            addBenefit();
+                          }
+                        }}
+                        placeholder="Add benefit"
+                      />
+                      <button type="button" onClick={addBenefit}>
+                        +
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      className="profile-add-link"
+                      onClick={addBenefit}
+                    >
+                      Add another benefit +
+                    </button>
+                  </>
+                ) : (
+                  <ul>
+                    {(descriptionSections.benefits.length > 0
+                      ? descriptionSections.benefits
+                      : ["No benefits listed"]
+                    ).map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
                 )}
               </div>
             </div>

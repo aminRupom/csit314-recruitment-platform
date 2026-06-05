@@ -321,3 +321,477 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Employer profile wireframe */
+.employer-profile-page {
+  min-height: 100vh;
+  padding: 0;
+  background: linear-gradient(115deg, #232a53 0%, #13183d 45%, #090d2d 100%);
+  color: #ffffff;
+}
+
+.employer-profile-page .employer-profile-hero,
+.employer-profile-page .company-info-section,
+.employer-profile-page .job-info-section,
+.employer-profile-page .employer-profile-error,
+.employer-profile-page .employer-profile-success,
+.employer-profile-page .employer-profile-loading {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.employer-profile-page .employer-profile-hero {
+  position: relative;
+  min-height: 174px;
+  padding: 10px 20px 22px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.88);
+  background: linear-gradient(112deg, #232a53 0%, #151a42 48%, #0b1034 100%);
+}
+
+.employer-profile-page .profile-header-actions {
+  position: absolute;
+  top: 6px;
+  right: 4px;
+  z-index: 3;
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+  margin: 0;
+}
+
+.employer-profile-page .profile-header-button {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #dce3ff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.employer-profile-page .logout-button {
+  min-width: 55px;
+  padding: 0 11px;
+  background: #a7b2e6;
+  color: #0d1237;
+}
+
+.employer-profile-page .back-button {
+  min-width: 52px;
+  gap: 4px;
+  padding: 0 7px;
+  background: transparent;
+  color: #ffffff;
+}
+
+.employer-profile-page .back-button::before {
+  content: "";
+  width: 17px;
+  height: 11px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 20' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 5 8l7 5'/%3E%3Cpath d='M6 8h15c5 0 8 3 8 7'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.employer-profile-page .profile-header-button:hover,
+.employer-profile-page .profile-edit-button:hover,
+.employer-profile-page .save-profile-button:hover {
+  transform: none;
+}
+
+.employer-profile-page .employer-profile-hero h1 {
+  display: inline-block;
+  margin: 8px 0 30px;
+  border-bottom: 4px solid #3da8ff;
+  color: #ffffff;
+  font-size: 41px;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.employer-profile-page .company-heading {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  text-align: center;
+}
+
+.employer-profile-page .company-heading h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.employer-profile-page .company-heading p {
+  margin: 5px 0 0;
+  color: #ffffff;
+  font-size: 27px;
+  line-height: 1;
+}
+
+.employer-profile-page .employer-membership-badge {
+  display: inline-block;
+  margin-top: 8px;
+  border: 1px solid rgba(167, 178, 230, 0.7);
+  border-radius: 4px;
+  background: rgba(167, 178, 230, 0.16);
+  color: #dce3ff;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.2;
+  padding: 3px 7px;
+}
+
+.employer-profile-page .employer-profile-error,
+.employer-profile-page .employer-profile-success,
+.employer-profile-page .employer-profile-loading,
+.employer-profile-page .profile-validation-message {
+  border-radius: 4px;
+  font-size: 13px;
+  padding: 7px 12px;
+}
+
+.employer-profile-page .company-info-section,
+.employer-profile-page .job-info-section {
+  position: relative;
+  border: 0;
+  border-radius: 0;
+  background: #10153a;
+  padding: 20px 80px 22px;
+}
+
+.employer-profile-page .company-info-section {
+  min-height: 123px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.88);
+}
+
+.employer-profile-page .job-info-section {
+  min-height: calc(100vh - 297px);
+  padding-top: 18px;
+}
+
+.employer-profile-page .profile-edit-button {
+  position: absolute;
+  top: 12px;
+  right: 10px;
+  min-width: 53px;
+  min-height: 23px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 2px solid #d6dcff;
+  border-radius: 4px;
+  background: #a7b2e6;
+  color: #11143a;
+  font-size: 12px;
+  font-weight: 400;
+  padding: 0 7px;
+}
+
+.employer-profile-page .profile-edit-button::after {
+  content: "";
+  width: 13px;
+  height: 13px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2311143a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.employer-profile-page .company-info-grid {
+  max-width: 590px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 66px;
+  margin: 0 auto;
+  padding-top: 5px;
+}
+
+.employer-profile-page .info-column {
+  gap: 13px;
+}
+
+.employer-profile-page .profile-field-row,
+.employer-profile-page .job-profile-row {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+}
+
+.employer-profile-page .profile-field-row label,
+.employer-profile-page .job-profile-row strong,
+.employer-profile-page .job-description-block strong,
+.employer-profile-page .array-section strong {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.employer-profile-page .profile-field-row span,
+.employer-profile-page .job-profile-row span,
+.employer-profile-page .profile-text-value,
+.employer-profile-page .description-text,
+.employer-profile-page .array-section li {
+  color: #dce3ff;
+  font-size: 13px;
+  line-height: 1.28;
+}
+
+.employer-profile-page .address-row {
+  align-items: start;
+}
+
+.employer-profile-page .address-row .profile-text-value {
+  display: grid;
+  gap: 9px;
+  min-width: 128px;
+  color: transparent;
+}
+
+.employer-profile-page .address-row .profile-text-value::before,
+.employer-profile-page .address-row .profile-text-value::after {
+  content: "";
+  display: block;
+  height: 1px;
+  background: rgba(220, 227, 255, 0.88);
+}
+
+.employer-profile-page .password-readonly-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.employer-profile-page .password-eye {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aeb8f2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 2 20 20'/%3E%3Cpath d='M10.6 10.6a2 2 0 0 0 2.8 2.8'/%3E%3Cpath d='M8.5 5.6A10.7 10.7 0 0 1 12 5c7 0 10 7 10 7a13.7 13.7 0 0 1-3.1 4.2'/%3E%3Cpath d='M5.6 5.6A13.7 13.7 0 0 0 2 12s3 7 10 7a10.8 10.8 0 0 0 4.7-1.1'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.employer-profile-page .password-input-shell {
+  position: relative;
+  display: block;
+}
+
+.employer-profile-page .password-input-shell .password-eye {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.employer-profile-page .profile-field-row input,
+.employer-profile-page .profile-field-row textarea,
+.employer-profile-page .job-profile-row input,
+.employer-profile-page .job-profile-row select,
+.employer-profile-page .job-description-block textarea,
+.employer-profile-page .array-section textarea,
+.employer-profile-page .salary-input-grid input,
+.employer-profile-page .add-inline-row input {
+  width: 100%;
+  min-height: 22px;
+  border: 0;
+  border-radius: 3px;
+  background-color: #454e7f;
+  color: #eef1ff;
+  padding: 2px 6px;
+  font-size: 13px;
+  outline: none;
+}
+
+.employer-profile-page .profile-field-row input:disabled {
+  opacity: 1;
+}
+
+.employer-profile-page .job-profile-row select {
+  appearance: none;
+  padding-right: 22px;
+  background-image: linear-gradient(45deg, transparent 50%, #c8d0f1 50%),
+    linear-gradient(135deg, #c8d0f1 50%, transparent 50%);
+  background-position: calc(100% - 14px) 8px, calc(100% - 7px) 8px;
+  background-repeat: no-repeat;
+  background-size: 7px 7px, 7px 7px;
+}
+
+.employer-profile-page .profile-field-row input:focus,
+.employer-profile-page .job-profile-row input:focus,
+.employer-profile-page .job-profile-row select:focus,
+.employer-profile-page .job-description-block textarea:focus,
+.employer-profile-page .add-inline-row input:focus {
+  box-shadow: 0 0 0 1px #dce3ff;
+}
+
+.employer-profile-page .company-save-button {
+  position: absolute;
+  right: 9px;
+  bottom: 8px;
+  margin: 0;
+}
+
+.employer-profile-page .employer-membership-box,
+.employer-profile-page .single-job-note {
+  display: none;
+}
+
+.employer-profile-page .job-form-content {
+  max-width: 565px;
+  display: grid;
+  gap: 13px;
+  margin: 0 0 0 0;
+}
+
+.employer-profile-page .job-description-block,
+.employer-profile-page .array-section {
+  display: grid;
+  gap: 8px;
+}
+
+.employer-profile-page .description-text {
+  min-height: 38px;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(rgba(220, 227, 255, 0.95), rgba(220, 227, 255, 0.95)) 0 12px / 100% 1px no-repeat,
+    linear-gradient(rgba(220, 227, 255, 0.95), rgba(220, 227, 255, 0.95)) 0 29px / 100% 1px no-repeat;
+  color: transparent;
+  padding: 0;
+}
+
+.employer-profile-page .job-description-block textarea {
+  min-height: 34px;
+  resize: vertical;
+}
+
+.employer-profile-page .array-section ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.employer-profile-page .editable-pill-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.employer-profile-page .editable-pill {
+  min-width: 252px;
+  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 0;
+  border-radius: 3px;
+  background: #444c7d;
+  color: #eef1ff;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 1px 8px;
+}
+
+.employer-profile-page .editable-pill span {
+  color: #8f96be;
+}
+
+.employer-profile-page .add-inline-row {
+  width: min(300px, 100%);
+  display: grid;
+  grid-template-columns: 1fr 30px;
+  gap: 6px;
+}
+
+.employer-profile-page .add-inline-row button {
+  min-height: 22px;
+  border: 0;
+  border-radius: 4px;
+  background: #a7b2e6;
+  color: #11143a;
+  cursor: pointer;
+}
+
+.employer-profile-page .profile-add-link {
+  width: max-content;
+  border: 0;
+  background: transparent;
+  color: #b5bbdc;
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+  text-decoration: underline;
+}
+
+.employer-profile-page .save-profile-button {
+  min-height: 25px;
+  border: 0;
+  border-radius: 4px;
+  background: #a7b2e6;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 400;
+  padding: 0 15px;
+}
+
+.employer-profile-page .job-info-section > .save-profile-button {
+  position: absolute;
+  right: 9px;
+  bottom: 8px;
+  margin: 0;
+}
+
+@media (max-width: 850px) {
+  .employer-profile-page .employer-profile-hero {
+    min-height: 160px;
+    padding: 42px 16px 20px;
+  }
+
+  .employer-profile-page .employer-profile-hero h1 {
+    font-size: 34px;
+  }
+
+  .employer-profile-page .company-heading h2 {
+    font-size: 26px;
+  }
+
+  .employer-profile-page .company-heading p {
+    font-size: 23px;
+  }
+
+  .employer-profile-page .company-info-section,
+  .employer-profile-page .job-info-section {
+    padding: 42px 18px 52px;
+  }
+
+  .employer-profile-page .company-info-grid,
+  .employer-profile-page .job-form-content {
+    max-width: none;
+    grid-template-columns: 1fr;
+  }
+
+  .employer-profile-page .profile-field-row,
+  .employer-profile-page .job-profile-row {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+}

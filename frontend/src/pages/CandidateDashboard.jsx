@@ -130,7 +130,9 @@ function MembershipPlansModal({ onClose, onStartTrial }) {
             <ul>
               <li>Upload resume</li>
               <li>View jobs</li>
-              <li>Search and filter results</li>
+              <li>Create job postings</li>
+              <li>View candidates</li>
+              <li>Search/Filter results</li>
               <li>View top-10 AI-driven recommendations</li>
             </ul>
           </article>
@@ -635,6 +637,16 @@ function CandidateDashboard() {
             />
           </div>
 
+          {!isProUser && (
+            <button
+              type="button"
+              className="membership-link"
+              onClick={() => setShowMembershipPlans(true)}
+            >
+              Subscribe to our membership to unlock more recommendations
+            </button>
+          )}
+
           <div className="recommendation-actions">
             <button
               type="button"
@@ -659,16 +671,6 @@ function CandidateDashboard() {
               Show all jobs
             </button>
           </div>
-
-          {!isProUser && (
-            <button
-              type="button"
-              className="membership-link"
-              onClick={() => setShowMembershipPlans(true)}
-            >
-              Subscribe to our membership to unlock more recommendations
-            </button>
-          )}
         </section>
       )}
 

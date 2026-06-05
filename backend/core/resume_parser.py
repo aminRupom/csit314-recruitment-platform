@@ -140,6 +140,67 @@ def _normalize_skills(skills) -> str:
     return str(skills)
 
 
+def _normalize_key(key) -> str:
+    return re.sub(r"[^a-z0-9]", "", str(key or "").lower())
+
+
+def _get_parsed_value(parsed: dict, *aliases):
+    if not isinstance(parsed, dict):
+        return ""
+
+    for alias in aliases:
+        if alias in parsed and parsed[alias] not in (None, "", []):
+            return parsed[alias]
+
+    normalized = {_normalize_key(key): value for key, value in parsed.items()}
+    for alias in aliases:
+        value = normalized.get(_normalize_key(alias))
+        if value not in (None, ""):
+            return value
+
+    return ""
+
+
+def _normalize_text(value) -> str:
+    if value in (None, ""):
+        return ""
+    if isinstance(value, list):
+        return "\n".join(_normalize_text(item) for item in value if item not in (None, ""))
+    if isinstance(value, dict):
+        parts = []
+        for key, item in value.items():
+            item_text = _normalize_text(item)
+            if item_text:
+                parts.append(f"{key}: {item_text}")
+        return "\n".join(parts)
+    return str(value).strip()
+
+
+def _normalize_years_experience(value) -> int:
+    if value in (None, ""):
+        return 0
+    if isinstance(value, (int, float)):
+        return max(0, int(value))
+
+    match = re.search(r"\d+", str(value))
+    if not match:
+        return 0
+    return int(match.group(0))
+
+
+def _normalize_work_mode(value: str) -> str:
+    pm = _normalize_text(value).lower()
+    if not pm:
+        return ""
+    if "remote" in pm:
+        return "REMOTE"
+    if "hybrid" in pm:
+        return "HYBRID"
+    if "on-site" in pm or "onsite" in pm or ("on" in pm and "site" in pm):
+        return "ONSITE"
+    return ""
+
+
 def _clean_line(line: str) -> str:
     return re.sub(r"\s+", " ", line).strip(" -|•\t")
 
@@ -261,7 +322,11 @@ def _heuristic_parse_resume(text: str) -> dict:
 def _merge_parsed_data(primary: dict, fallback: dict) -> dict:
     merged = dict(primary or {})
     for key, fallback_value in fallback.items():
-        primary_value = merged.get(key)
+        normalized_values = {
+            _normalize_key(existing_key): existing_value
+            for existing_key, existing_value in merged.items()
+        }
+        primary_value = normalized_values.get(_normalize_key(key))
         if primary_value in (None, "", []):
             merged[key] = fallback_value
     return merged
@@ -332,23 +397,57 @@ def parse_resume_and_fill_profile(profile):
         logger.exception("OpenAI parsing failed: %s", e)
         parsed = fallback_parsed
 
-    # Map parsed fields to model fields
+    # Map parsed fields to model fields. Accept canonical serializer keys and
+    # common resume-parser aliases so upload parsing remains tolerant.
     try:
-        full_name = parsed.get("full_name") or parsed.get("name") or ""
-        contact_email = parsed.get("contact_email") or parsed.get("email") or ""
-        contact_phone = parsed.get("contact_phone") or parsed.get("phone") or ""
-        education = _map_education(parsed.get("education", ""))
-        major = parsed.get("major", "") or parsed.get("field_of_study", "")
-        years = parsed.get("years_experience", parsed.get("experience_years", ""))
-        try:
-            years = int(years) if years not in (None, "") else 0
-        except Exception:
-            years = 0
-        skills = _normalize_skills(parsed.get("skills", ""))
-        work_experience = parsed.get("work_experience", "") or parsed.get("experience", "")
-        preferred_work_mode = parsed.get("preferred_work_mode", "")
-        preferred_location = parsed.get("preferred_location", "")
-        bio = parsed.get("bio", "")
+        full_name = _normalize_text(
+            _get_parsed_value(parsed, "full_name", "name", "candidate_name")
+        )
+        contact_email = _normalize_text(
+            _get_parsed_value(parsed, "contact_email", "email", "email_address")
+        )
+        contact_phone = _normalize_text(
+            _get_parsed_value(parsed, "contact_phone", "phone", "phone_number")
+        )
+        education = _map_education(
+            _normalize_text(_get_parsed_value(parsed, "education", "degree"))
+        )
+        major = _normalize_text(
+            _get_parsed_value(parsed, "major", "field_of_study", "field of study")
+        )
+        years = _normalize_years_experience(
+            _get_parsed_value(parsed, "years_experience", "experience_years")
+        )
+        skills = _normalize_skills(
+            _get_parsed_value(parsed, "skills", "skills_new", "skills (new)")
+        )
+        work_experience = _normalize_text(
+            _get_parsed_value(
+                parsed,
+                "work_experience",
+                "work_experience_new",
+                "work experience",
+                "experience",
+            )
+        )
+        preferred_work_mode = _normalize_work_mode(
+            _get_parsed_value(
+                parsed,
+                "preferred_work_mode",
+                "preferred_work_mode_new",
+                "preferred work mode",
+            )
+        )
+        preferred_location = _normalize_text(
+            _get_parsed_value(
+                parsed,
+                "preferred_location",
+                "preferred_location_new",
+                "preferred location",
+                "location",
+            )
+        )
+        bio = _normalize_text(_get_parsed_value(parsed, "bio", "summary", "profile"))
 
         if full_name:
             profile.full_name = full_name
@@ -366,14 +465,7 @@ def parse_resume_and_fill_profile(profile):
         if work_experience:
             profile.work_experience = work_experience
         if preferred_work_mode:
-            # Normalize to our model choices
-            pm = preferred_work_mode.strip().lower()
-            if "remote" in pm:
-                profile.preferred_work_mode = "REMOTE"
-            elif "hybrid" in pm:
-                profile.preferred_work_mode = "HYBRID"
-            elif "on" in pm or "site" in pm or "onsite" in pm:
-                profile.preferred_work_mode = "ONSITE"
+            profile.preferred_work_mode = preferred_work_mode
         if preferred_location:
             profile.preferred_location = preferred_location
         if bio:

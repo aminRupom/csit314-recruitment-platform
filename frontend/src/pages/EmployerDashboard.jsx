@@ -24,6 +24,17 @@ const WORK_MODE_LABELS = {
   HYBRID: "Hybrid",
 };
 
+const FILTER_SKILL_OPTIONS = [
+  "Marketing",
+  "Coding",
+  "Conversational",
+  "Graphic Design",
+  "Music",
+  "Entrepreneur",
+];
+
+const LANGUAGE_OPTIONS = ["English", "Mandarin", "Hindi", "Arabic", "Spanish"];
+
 function splitSkills(skills) {
   return (skills || "")
     .split(",")
@@ -41,6 +52,95 @@ function getInitials(name) {
       .join("")
       .toUpperCase() || "?"
   );
+}
+
+const EMPTY_EXPERIENCE = {
+  jobTitle: "",
+  companyName: "",
+  dateRange: "",
+  description: "",
+};
+
+function parseBioSections(value) {
+  const text = (value || "").trim();
+
+  if (!text) {
+    return {
+      summary: "",
+      achievements: [],
+    };
+  }
+
+  const achievementMatch = text.match(/\bAchievements?:\s*/i);
+
+  if (!achievementMatch) {
+    return {
+      summary: text,
+      achievements: [],
+    };
+  }
+
+  const summary = text.slice(0, achievementMatch.index).trim();
+  const achievementText = text
+    .slice(achievementMatch.index + achievementMatch[0].length)
+    .trim();
+
+  return {
+    summary,
+    achievements: achievementText
+      .split(/,|\r?\n/)
+      .map((achievement) => achievement.replace(/^[-*]\s*/, "").trim())
+      .filter(Boolean),
+  };
+}
+
+function parseWorkExperience(value) {
+  const text = (value || "").trim();
+
+  if (!text) {
+    return EMPTY_EXPERIENCE;
+  }
+
+  const [headingLine = "", ...descriptionLines] = text.split(/\r?\n/);
+  let heading = headingLine.trim();
+  let dateRange = "";
+  const dateMatch = heading.match(/\(([^()]*)\)\s*$/);
+
+  if (dateMatch) {
+    dateRange = dateMatch[1].trim();
+    heading = heading.slice(0, dateMatch.index).trim();
+  }
+
+  const atMarker = " at ";
+  const atIndex = heading.toLowerCase().lastIndexOf(atMarker);
+
+  return {
+    jobTitle:
+      atIndex >= 0 ? heading.slice(0, atIndex).trim() : heading.trim(),
+    companyName:
+      atIndex >= 0 ? heading.slice(atIndex + atMarker.length).trim() : "",
+    dateRange,
+    description: descriptionLines.join("\n").trim(),
+  };
+}
+
+function getCandidateAvailabilityStatus(candidate) {
+  const availabilityValue = String(
+    candidate.availability ||
+      candidate.ready_now ||
+      candidate.ready_to_work ||
+      ""
+  ).toLowerCase();
+
+  if (
+    availabilityValue.includes("not") ||
+    availabilityValue.includes("unavailable") ||
+    availabilityValue.includes("false")
+  ) {
+    return "Not readily available";
+  }
+
+  return "Open to work";
 }
 
 function normalizeCandidate(candidate) {
@@ -62,17 +162,19 @@ function normalizeCandidate(candidate) {
     cardSkills: skills.slice(0, 3),
     extraSkills: Math.max(skills.length - 3, 0),
     allSkills: skills,
-    status: candidate.preferred_work_mode
-      ? `Prefers ${
-          WORK_MODE_LABELS[candidate.preferred_work_mode] ||
-          candidate.preferred_work_mode
-        }`
-      : "Available candidate",
+    avatarUrl:
+      candidate.profile_photo_url ||
+      candidate.photo_url ||
+      candidate.avatar_url ||
+      "",
+    status: getCandidateAvailabilityStatus(candidate),
     searchText: [
       candidate.full_name,
       candidate.major,
       candidate.preferred_location,
       candidate.education,
+      candidate.language,
+      candidate.languages,
       candidate.skills,
       candidate.work_experience,
       candidate.bio,
@@ -137,7 +239,13 @@ function CandidateCard({ candidate, isSelected, onClick }) {
           <p>{candidate.role}</p>
         </div>
 
-        <div className="candidate-avatar">{getInitials(candidate.name)}</div>
+        <div className="candidate-avatar">
+          {candidate.avatarUrl ? (
+            <img src={candidate.avatarUrl} alt="" />
+          ) : (
+            <span>{getInitials(candidate.name)}</span>
+          )}
+        </div>
       </div>
 
       <div className="candidate-card-body">
@@ -170,6 +278,25 @@ function CandidateCard({ candidate, isSelected, onClick }) {
 }
 
 function FilterPanel({ filters, onChange, onApply, onReset }) {
+  const selectedSkills = splitSkills(filters.skills);
+
+  function updateFilter(name, value) {
+    onChange({
+      target: {
+        name,
+        value,
+      },
+    });
+  }
+
+  function toggleSkill(skill) {
+    const nextSkills = selectedSkills.includes(skill)
+      ? selectedSkills.filter((selectedSkill) => selectedSkill !== skill)
+      : [...selectedSkills, skill];
+
+    updateFilter("skills", nextSkills.join(", "));
+  }
+
   return (
     <div className="employer-filter-panel">
       <div className="filter-row">
@@ -188,28 +315,49 @@ function FilterPanel({ filters, onChange, onApply, onReset }) {
         </label>
 
         <label>
-          Education
-          <select name="education" value={filters.education} onChange={onChange}>
-            <option value="">Education</option>
-            <option value="HIGH_SCHOOL">High School</option>
-            <option value="DIPLOMA">Diploma</option>
-            <option value="BACHELOR">Bachelor</option>
-            <option value="MASTER">Master</option>
-            <option value="PHD">PhD</option>
+          Language spoken
+          <select
+            name="language"
+            value={filters.language}
+            onChange={onChange}
+          >
+            <option value="">Language</option>
+            {LANGUAGE_OPTIONS.map((language) => (
+              <option key={language} value={language}>
+                {language}
+              </option>
+            ))}
           </select>
         </label>
       </div>
 
-      <div className="filter-row">
-        <label>
-          Skill
+      <div className="filter-check-section">
+        <p>Skills</p>
+
+        {FILTER_SKILL_OPTIONS.map((skill) => (
+          <label key={skill} className="filter-checkbox-row">
+            <input
+              type="checkbox"
+              checked={selectedSkills.includes(skill)}
+              onChange={() => toggleSkill(skill)}
+            />
+            <span>{skill}</span>
+          </label>
+        ))}
+      </div>
+
+      <div className="filter-check-section availability-section">
+        <p>Availability</p>
+
+        <label className="filter-checkbox-row">
           <input
-            type="text"
-            name="skills"
-            value={filters.skills}
-            onChange={onChange}
-            placeholder="Python, React..."
+            type="checkbox"
+            checked={Boolean(filters.availability)}
+            onChange={(event) =>
+              updateFilter("availability", event.target.checked ? "ready" : "")
+            }
           />
+          <span>Ready to work</span>
         </label>
       </div>
 
@@ -287,6 +435,12 @@ function RecommendationPanel({
         </div>
       </div>
 
+      {!isProMembership && (
+        <button className="membership-link" onClick={onSubscribe}>
+          Subscribe to our membership to unlock more recommendations
+        </button>
+      )}
+
       <div className="recommendation-actions">
         <button
           type="button"
@@ -301,12 +455,6 @@ function RecommendationPanel({
           Show all
         </button>
       </div>
-
-      {!isProMembership && (
-        <button className="membership-link" onClick={onSubscribe}>
-          Subscribe to our membership to unlock more recommendations
-        </button>
-      )}
     </div>
   );
 }
@@ -363,8 +511,43 @@ function MembershipPlansModal({ onClose, onStartTrial }) {
   );
 }
 
+function TrialConfirmationModal({ onClose, onViewProfile }) {
+  return (
+    <div
+      className="employer-trial-backdrop"
+      role="presentation"
+      onClick={onClose}
+    >
+      <section
+        className="employer-trial-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="employer-trial-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h2 id="employer-trial-title">Congratulations</h2>
+        <p>Your Pro free trial is now active.</p>
+
+        <div className="employer-trial-actions">
+          <button type="button" onClick={onViewProfile}>
+            View Profile
+          </button>
+
+          <button type="button" onClick={onClose}>
+            Done
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function CandidateProfileModal({ candidate, onClose }) {
   if (!candidate) return null;
+
+  const bioSections = parseBioSections(candidate.bio);
+  const experience = parseWorkExperience(candidate.work_experience);
+  const achievements = bioSections.achievements;
 
   return (
     <div className="profile-modal">
@@ -378,18 +561,28 @@ function CandidateProfileModal({ candidate, onClose }) {
           <p>{candidate.role}</p>
         </div>
 
-        <div className="profile-photo">{getInitials(candidate.name)}</div>
+        <div className="profile-photo">
+          {candidate.avatarUrl ? (
+            <img src={candidate.avatarUrl} alt="" />
+          ) : (
+            <span>{getInitials(candidate.name)}</span>
+          )}
+        </div>
       </div>
 
       <div className="contact-box">
-        <p>Location: {candidate.location}</p>
-        <p>Phone Number: {candidate.contact_phone || "Not provided"}</p>
-        <p>Email: {candidate.contact_email || "Not provided"}</p>
+        <p className="contact-location">Location: {candidate.location}</p>
+        <p className="contact-phone">
+          Phone Number: {candidate.contact_phone || "Not provided"}
+        </p>
+        <p className="contact-email">
+          Email: {candidate.contact_email || "Not provided"}
+        </p>
       </div>
 
       <section className="profile-section">
         <h3>Professional Summary:</h3>
-        <p>{candidate.bio || "No professional summary provided."}</p>
+        <p>{bioSections.summary || "No professional summary provided."}</p>
       </section>
 
       <section className="profile-section">
@@ -397,13 +590,18 @@ function CandidateProfileModal({ candidate, onClose }) {
 
         <div className="profile-info-box">
           <p>
-            Years Experience: <span>{candidate.years_experience || 0}</span>
+            Job Title: <span>{experience.jobTitle || candidate.role || "-"}</span>
           </p>
-          <p>Work experience:</p>
           <p>
-            <span>
-              {candidate.work_experience || "No work experience provided."}
-            </span>
+            Company Name: <span>{experience.companyName || "-"}</span>
+          </p>
+          <p>
+            Start Date - End Date: <span>{experience.dateRange || "-"}</span>
+          </p>
+          <p>
+            Job description:
+            <br />
+            <span>{experience.description || "No work experience provided."}</span>
           </p>
         </div>
       </section>
@@ -416,24 +614,25 @@ function CandidateProfileModal({ candidate, onClose }) {
             Certification: <span>{candidate.educationLabel}</span>
           </p>
           <p>
-            Major: <span>{candidate.major || "Not specified"}</span>
+            School Name: <span>{candidate.major || "Not specified"}</span>
           </p>
           <p>
-            Preferred work mode: <span>{candidate.workModeLabel}</span>
+            Start Date - End Date: <span>-</span>
           </p>
         </div>
       </section>
 
       <div className="profile-bottom-grid">
         <section>
-          <h3>Resume:</h3>
-          {candidate.resume_url ? (
-            <a href={candidate.resume_url} target="_blank" rel="noreferrer">
-              Download resume
-            </a>
-          ) : (
-            <p>No resume uploaded.</p>
-          )}
+          <h3>Achievements:</h3>
+          <ul>
+            {(achievements.length > 0
+              ? achievements
+              : ["No achievements listed"]
+            ).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
         </section>
 
         <section>
@@ -462,6 +661,7 @@ export default function EmployerDashboard() {
   const [showFilter, setShowFilter] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [showMembershipPlans, setShowMembershipPlans] = useState(false);
+  const [showTrialConfirmation, setShowTrialConfirmation] = useState(false);
   const [isProMembership, setIsProMembership] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [topK, setTopK] = useState(10);
@@ -469,7 +669,9 @@ export default function EmployerDashboard() {
   const [filters, setFilters] = useState({
     minExperience: "",
     education: "",
+    language: "",
     skills: "",
+    availability: "",
   });
   const [loading, setLoading] = useState(true);
   const [candidateSearching, setCandidateSearching] = useState(false);
@@ -572,9 +774,22 @@ export default function EmployerDashboard() {
       }
 
       if (
-        filters.skills &&
-        !candidate.skills?.toLowerCase().includes(filters.skills.toLowerCase())
+        filters.language &&
+        !candidate.searchText.includes(filters.language.toLowerCase())
       ) {
+        return false;
+      }
+
+      if (
+        filters.skills &&
+        !splitSkills(filters.skills).every((skill) =>
+          candidate.skills?.toLowerCase().includes(skill.toLowerCase())
+        )
+      ) {
+        return false;
+      }
+
+      if (filters.availability && candidate.status !== "Open to work") {
         return false;
       }
 
@@ -599,7 +814,9 @@ export default function EmployerDashboard() {
     setFilters({
       minExperience: "",
       education: "",
+      language: "",
       skills: "",
+      availability: "",
     });
     setShowFilter(false);
   }
@@ -641,10 +858,10 @@ export default function EmployerDashboard() {
     setError("");
 
     try {
-      const updatedUser = await startEmployerFreeTrial();
-      setIsProMembership(Boolean(updatedUser?.membership));
+      await startEmployerFreeTrial();
+      setIsProMembership(true);
       setShowMembershipPlans(false);
-      setShowRecommendations(true);
+      setShowTrialConfirmation(true);
     } catch (err) {
       setError(err.message || "Could not activate membership.");
     }
@@ -778,6 +995,13 @@ export default function EmployerDashboard() {
         <MembershipPlansModal
           onClose={() => setShowMembershipPlans(false)}
           onStartTrial={handleStartTrial}
+        />
+      )}
+
+      {showTrialConfirmation && (
+        <TrialConfirmationModal
+          onClose={() => setShowTrialConfirmation(false)}
+          onViewProfile={() => navigate("/profile/employer")}
         />
       )}
 
